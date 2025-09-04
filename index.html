@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alibi • Jeu d'Interrogatoire</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .network-info {
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      right: 2rem;
+      background: rgba(3, 255, 152, 0.05);
+      border: 1px solid rgba(3, 255, 152, 0.3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    
+    .network-info h4 {
+      color: var(--color-primary);
+      margin: 0 0 1rem 0;
+      font-weight: 600;
+      text-shadow: var(--glow);
+    }
+    
+    .network-info p {
+      margin: 0.5rem 0;
+      color: var(--color-primary);
+      opacity: 0.8;
+    }
+    
+    .ip-address {
+      font-family: var(--font-title);
+      color: var(--color-accent);
+      text-shadow: var(--glow);
+      font-weight: 600;
+    }
+    
+    .note {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(3, 255, 152, 0.2);
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="background"></div>
+
+  <div class="center-content">
+    <h1 class="title">
+      Alibi<span class="blinker">_</span>
+    </h1>
+    <p class="subtitle">Jeu d'interrogatoire en réseau</p>
+  </div>
+
+  <section class="role-selection">
+    <div class="roles-grid">
+      <div class="role-card">
+        <h2 class="role-title">Accusé</h2>
+        <p class="role-desc">
+          Vous êtes interrogé par les enquêteurs. Répondez aux questions et observez les réactions de l'équipe pour défendre votre alibi.
+        </p>
+        <a href="/accused" class="role-btn">Rejoindre comme Accusé</a>
+      </div>
+
+      <div class="role-card">
+        <h2 class="role-title">Enquêteur</h2>
+        <p class="role-desc">
+          Contrôlez l'interrogatoire, posez des questions, évaluez les réponses et gérez les scores des équipes en temps réel.
+        </p>
+        <a href="/investigator" class="role-btn">Rejoindre comme Enquêteur</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="network-info">
+    <h4>🌐 Accès Réseau Local</h4>
+    <p>Pour jouer depuis d'autres appareils sur le même réseau :</p>
+    <p>Remplacez <span class="ip-address">localhost</span> par l'adresse IP de cette machine</p>
+    <p>Exemple : <span class="ip-address">http://192.168.1.100:3000</span></p>
+    <div class="note">
+      L'adresse IP exacte s'affiche dans la console du serveur lors du démarrage
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p class="footer-text">
+      Utilisez Node.js pour la communication WebSocket entre les appareils
+    </p>
+  </footer>
+
+  <script>
+    // Afficher l'adresse IP locale si possible
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentHost = window.location.host;
+      const ipAddressElements = document.querySelectorAll('.ip-address');
+      
+      // Si on n'est pas sur localhost, afficher l'adresse actuelle
+      if (!currentHost.includes('localhost') && !currentHost.includes('127.0.0.1')) {
+        ipAddressElements.forEach(el => {
+          if (el.textContent === 'localhost') {
+            el.textContent = currentHost;
+          } else if (el.textContent.includes('192.168.1.100')) {
+            el.textContent = `http://${currentHost}`;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
