@@ -1,0 +1,31 @@
+{
+  "teams": {
+    "A": {
+      "score": 2,
+      "answers": [
+        {
+          "question": "Qui était avec vous ce jour-là ?",
+          "correct": true,
+          "timestamp": "2025-09-04T15:08:05.353Z"
+        },
+        {
+          "question": "Qui était avec vous ce jour-là ?",
+          "correct": true,
+          "timestamp": "2025-09-04T15:08:06.399Z"
+        }
+      ]
+    },
+    "B": {
+      "score": 0,
+      "answers": []
+    }
+  },
+  "activeTeam": "A",
+  "currentQuestion": "Qui était avec vous ce jour-là ?",
+  "questionIndex": 1,
+  "status": "playing",
+  "connectionsCount": {
+    "accused": 1,
+    "investigators": 2
+  }
+}

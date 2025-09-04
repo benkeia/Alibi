@@ -229,7 +229,7 @@
             role: 'investigator'
           }));
           
-          addLogEntry('Connexion établie', 'success');
+          addLogEntry('Connexion établie - Restauration de l\'état...', 'success');
         };
 
         ws.onmessage = function(event) {
@@ -285,7 +285,15 @@
           break;
         case 'scoreUpdate':
           updateTeamScore(message.data.team, message.data.score, message.data.isCorrect);
+          // Mettre à jour l'historique local si fourni
+          if (message.data.answers) {
+            restoreTeamAnswers(message.data.team, message.data.answers);
+          }
           addLogEntry(`Équipe ${message.data.team}: ${message.data.isCorrect ? 'Correct' : 'Incorrect'} (${message.data.score}/5)`, message.data.isCorrect ? 'success' : 'error');
+          break;
+        case 'connectionUpdate':
+          updateConnectionsDisplay(message.data);
+          addLogEntry(`Connexions: ${message.data.accused} accusés, ${message.data.investigators} enquêteurs`, 'info');
           break;
         case 'teamReset':
           resetTeamScore(message.data.team);
@@ -331,15 +339,55 @@
     function updateGameState(newState) {
       gameState = { ...gameState, ...newState };
       
+      console.log('🔄 État du jeu mis à jour:', gameState);
+      
+      // Mettre à jour l'affichage des scores
       updateTeamScore('A', gameState.teams.A.score);
       updateTeamScore('B', gameState.teams.B.score);
+      
+      // Restaurer les cercles de score avec l'historique
+      if (gameState.teams.A.answers) {
+        restoreTeamAnswers('A', gameState.teams.A.answers);
+      }
+      if (gameState.teams.B.answers) {
+        restoreTeamAnswers('B', gameState.teams.B.answers);
+      }
+      
+      // Mettre à jour la question et l'équipe active
       updateQuestionDisplay(gameState.currentQuestion);
       setActiveTeam(gameState.activeTeam);
       
       // Mettre à jour les connexions si disponibles
-      if (newState.connections) {
+      if (newState.connections || newState.connectionsCount) {
+        const connData = newState.connections || newState.connectionsCount;
+        updateConnectionsDisplay(connData);
+      }
+      
+      addLogEntry(`État du jeu restauré - A:${gameState.teams.A.score}/5, B:${gameState.teams.B.score}/5`, 'info');
+    }
+
+    // Restaurer l'historique des réponses d'une équipe
+    function restoreTeamAnswers(team, answers) {
+      const circlesElement = team === 'A' ? elements.teamACircles : elements.teamBCircles;
+      
+      if (circlesElement && answers) {
+        const circles = circlesElement.querySelectorAll('.score-circle');
+        circles.forEach((circle, index) => {
+          if (index < answers.length) {
+            const answer = answers[index];
+            circle.className = answer.correct ? 'score-circle correct' : 'score-circle incorrect';
+          } else {
+            circle.className = 'score-circle pending';
+          }
+        });
+      }
+    }
+
+    // Mettre à jour l'affichage des connexions
+    function updateConnectionsDisplay(connData) {
+      if (connData.accused !== undefined && connData.investigators !== undefined) {
         elements.connectionsDisplay.textContent = 
-          `${newState.connections.accused.length || 0} accusés, ${newState.connections.investigators.length || 0} enquêteurs`;
+          `${connData.accused} accusés, ${connData.investigators} enquêteurs`;
       }
     }
 

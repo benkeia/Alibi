@@ -119,7 +119,27 @@ test_alibi/
 - `questionUpdate` : Nouvelle question
 - `teamToggle` : Changement d'équipe active
 
-## 🎨 Personnalisation
+## 🔄 Persistance des Données
+
+### **Fonctionnalité Anti-Reload**
+Le jeu sauvegarde automatiquement son état et le restaure même après :
+- ❌ Rechargement de page (F5)
+- ❌ Fermeture/réouverture du navigateur
+- ❌ Redémarrage du serveur
+- ❌ Déconnexion temporaire
+
+### **Ce qui est Sauvegardé :**
+- 📊 **Scores des équipes** A et B (avec historique correct/incorrect)
+- 📝 **Question actuelle** et index de question
+- 🎯 **Équipe active** en cours
+- 🎮 **État du jeu** (attente/en cours/terminé)
+- 📋 **Historique des réponses** pour chaque équipe
+
+### **Sauvegarde Automatique :**
+- 💾 Sauvegarde immédiate après chaque action
+- 📂 Fichier `gamestate.json` créé automatiquement
+- 🔄 Restauration transparente au démarrage
+- 🔗 Synchronisation instantanée des nouveaux clients
 
 ### Couleurs et Style
 Modifiez les variables CSS dans `style.css` :

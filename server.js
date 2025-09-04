@@ -1,10 +1,43 @@
 const express = require('express');
 const WebSocket = require('ws');
 const path = require('path');
+const fs = require('fs');
 const { networkInterfaces } = require('os');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const STATE_FILE = path.join(__dirname, 'gamestate.json');
+
+// Fonction pour sauvegarder l'état sur disque
+function saveStateToDisk() {
+    try {
+        const persistentState = getPersistentState();
+        persistentState.lastSaved = new Date().toISOString();
+        fs.writeFileSync(STATE_FILE, JSON.stringify(persistentState, null, 2));
+        console.log('💾 État sauvegardé sur disque à', new Date().toLocaleTimeString());
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+    }
+}
+
+// Fonction pour charger l'état depuis le disque
+function loadStateFromDisk() {
+    try {
+        if (fs.existsSync(STATE_FILE)) {
+            const savedState = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+            restorePersistentState(savedState);
+            if (savedState.lastSaved) {
+                console.log('📂 État restauré depuis le disque (sauvé le', new Date(savedState.lastSaved).toLocaleString(), ')');
+            } else {
+                console.log('📂 État restauré depuis le disque');
+            }
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement:', error);
+    }
+    return false;
+}
 
 // Servir les fichiers statiques
 app.use(express.static(path.join(__dirname)));
@@ -66,6 +99,32 @@ let gameState = {
     }
 };
 
+// Fonction pour sauvegarder l'état persistant
+function getPersistentState() {
+    return {
+        teams: gameState.teams,
+        activeTeam: gameState.activeTeam,
+        currentQuestion: gameState.currentQuestion,
+        questionIndex: gameState.questionIndex,
+        status: gameState.status,
+        connectionsCount: {
+            accused: gameState.connections.accused.length,
+            investigators: gameState.connections.investigators.length
+        }
+    };
+}
+
+// Fonction pour restaurer l'état depuis les données persistantes
+function restorePersistentState(persistentData) {
+    if (persistentData) {
+        gameState.teams = persistentData.teams || gameState.teams;
+        gameState.activeTeam = persistentData.activeTeam || gameState.activeTeam;
+        gameState.currentQuestion = persistentData.currentQuestion || gameState.currentQuestion;
+        gameState.questionIndex = persistentData.questionIndex || gameState.questionIndex;
+        gameState.status = persistentData.status || gameState.status;
+    }
+}
+
 const questions = [
     "Où étiez-vous le 15 mars entre 14h et 16h ?",
     "Qui était avec vous ce jour-là ?",
@@ -114,17 +173,31 @@ wss.on('connection', (ws, req) => {
                         ws.role = 'investigator';
                     }
                     
-                    // Envoyer l'état initial
+                    // Envoyer l'état initial complet avec données persistantes
+                    const fullGameState = {
+                        ...getPersistentState(),
+                        connections: {
+                            accused: gameState.connections.accused.length,
+                            investigators: gameState.connections.investigators.length
+                        }
+                    };
+                    
                     ws.send(JSON.stringify({
                         type: 'gameState',
-                        data: {
-                            ...gameState,
-                            connections: undefined // Ne pas envoyer les connexions WebSocket
-                        }
+                        data: fullGameState
                     }));
                     
                     console.log(`✅ Client enregistré comme ${message.role}`);
                     console.log(`📊 Connexions: ${gameState.connections.accused.length} accusés, ${gameState.connections.investigators.length} enquêteurs`);
+                    
+                    // Notifier les autres clients du changement de connexion
+                    broadcastToType('investigators', {
+                        type: 'connectionUpdate',
+                        data: {
+                            accused: gameState.connections.accused.length,
+                            investigators: gameState.connections.investigators.length
+                        }
+                    });
                     break;
 
                 case 'answer':
@@ -167,11 +240,13 @@ wss.on('connection', (ws, req) => {
                             data: {
                                 team: team,
                                 score: gameState.teams[team].score,
-                                isCorrect: message.isCorrect
+                                isCorrect: message.isCorrect,
+                                answers: gameState.teams[team].answers
                             }
                         });
                         
-                        // Feedback visuel
+                        // Sauvegarder l'état après modification
+                        saveStateToDisk();
                         broadcastToAll({
                             type: 'feedback',
                             data: {
@@ -193,6 +268,9 @@ wss.on('connection', (ws, req) => {
                             type: 'teamReset',
                             data: { team: resetTeam }
                         });
+                        
+                        // Sauvegarder l'état après modification
+                        saveStateToDisk();
                     }
                     break;
 
@@ -208,6 +286,9 @@ wss.on('connection', (ws, req) => {
                             index: gameState.questionIndex
                         }
                     });
+                    
+                    // Sauvegarder l'état après modification
+                    saveStateToDisk();
                     break;
 
                 case 'toggleActiveTeam':
@@ -218,6 +299,9 @@ wss.on('connection', (ws, req) => {
                         type: 'teamToggle',
                         data: { activeTeam: gameState.activeTeam }
                     });
+                    
+                    // Sauvegarder l'état après modification
+                    saveStateToDisk();
                     break;
 
                 case 'resetAll':
@@ -237,6 +321,9 @@ wss.on('connection', (ws, req) => {
                             questionIndex: gameState.questionIndex
                         }
                     });
+                    
+                    // Sauvegarder l'état après modification
+                    saveStateToDisk();
                     break;
 
                 case 'startGame':
@@ -246,6 +333,9 @@ wss.on('connection', (ws, req) => {
                         type: 'gameStart',
                         data: { status: gameState.status }
                     });
+                    
+                    // Sauvegarder l'état après modification
+                    saveStateToDisk();
                     break;
 
                 case 'endGame':
@@ -258,6 +348,9 @@ wss.on('connection', (ws, req) => {
                             finalScores: gameState.teams
                         }
                     });
+                    
+                    // Sauvegarder l'état après modification
+                    saveStateToDisk();
                     break;
 
                 default:
@@ -270,14 +363,28 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', () => {
         // Nettoyer les connexions fermées
-        if (ws.role === 'accused') {
+        const wasAccused = ws.role === 'accused';
+        const wasInvestigator = ws.role === 'investigator';
+        
+        if (wasAccused) {
             gameState.connections.accused = gameState.connections.accused.filter(client => client !== ws);
-        } else if (ws.role === 'investigator') {
+        } else if (wasInvestigator) {
             gameState.connections.investigators = gameState.connections.investigators.filter(client => client !== ws);
         }
         
         console.log(`🔌 Connexion fermée (${ws.role || 'inconnu'})`);
         console.log(`📊 Connexions restantes: ${gameState.connections.accused.length} accusés, ${gameState.connections.investigators.length} enquêteurs`);
+        
+        // Notifier les autres clients du changement de connexion
+        if (wasAccused || wasInvestigator) {
+            broadcastToType('investigators', {
+                type: 'connectionUpdate',
+                data: {
+                    accused: gameState.connections.accused.length,
+                    investigators: gameState.connections.investigators.length
+                }
+            });
+        }
     });
 
     ws.on('error', (error) => {
@@ -292,4 +399,12 @@ setInterval(() => {
 }, 30000);
 
 console.log('🎮 Serveur de jeu Alibi démarré');
-console.log('📝 État initial du jeu:', gameState);
+
+// Charger l'état précédent s'il existe
+if (loadStateFromDisk()) {
+    console.log('✅ État précédent restauré avec succès');
+} else {
+    console.log('🆕 Nouveau jeu initialisé');
+}
+
+console.log('📝 État initial du jeu:', getPersistentState());
