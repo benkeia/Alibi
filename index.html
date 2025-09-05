@@ -48,6 +48,34 @@
       font-size: 0.8rem;
       opacity: 0.6;
     }
+    
+    .role-card.multi-mode {
+      grid-column: span 2;
+      background: rgba(3, 255, 152, 0.08);
+      border: 2px solid var(--color-accent);
+    }
+    
+    .multi-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .role-btn.small {
+      font-size: 1rem;
+      padding: 0.8rem 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .role-card.multi-mode {
+        grid-column: span 1;
+      }
+      
+      .multi-options {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -60,22 +88,38 @@
     <p class="subtitle">Jeu d'interrogatoire en réseau</p>
   </div>
 
-  <section class="role-selection">
+  <section class="role-selection" style="margin-bottom: 250px;">
     <div class="roles-grid">
+      <!-- Mode Classique -->
       <div class="role-card">
-        <h2 class="role-title">Accusé</h2>
+        <h2 class="role-title">Accusé (Mode Simple)</h2>
         <p class="role-desc">
-          Vous êtes interrogé par les enquêteurs. Répondez aux questions et observez les réactions de l'équipe pour défendre votre alibi.
+          Mode classique : Un accusé face aux enquêteurs.
         </p>
         <a href="/accused" class="role-btn">Rejoindre comme Accusé</a>
       </div>
 
       <div class="role-card">
-        <h2 class="role-title">Enquêteur</h2>
+        <h2 class="role-title">Enquêteur (Mode Simple)</h2>
         <p class="role-desc">
-          Contrôlez l'interrogatoire, posez des questions, évaluez les réponses et gérez les scores des équipes en temps réel.
+          Mode classique : Contrôlez l'interrogatoire.
         </p>
         <a href="/investigator" class="role-btn">Rejoindre comme Enquêteur</a>
+      </div>
+
+      <!-- Mode Multi-Joueurs 2v2 -->
+      <div class="role-card multi-mode">
+        <h2 class="role-title">🎮 Mode 2v2</h2>
+        <p class="role-desc">
+          <strong>4 joueurs :</strong> 2 Enquêteurs + 2 Accusés<br>
+          Chaque enquêteur interroge son accusé, avec coordination entre équipes.
+        </p>
+        <div class="multi-options">
+          <a href="/investigator1" class="role-btn small">Enquêteur 1</a>
+          <a href="/investigator2" class="role-btn small">Enquêteur 2</a>
+          <a href="/accused1" class="role-btn small">Accusé 1</a>
+          <a href="/accused2" class="role-btn small">Accusé 2</a>
+        </div>
       </div>
     </div>
   </section>

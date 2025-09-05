@@ -51,8 +51,24 @@ app.get('/accused', (req, res) => {
     res.sendFile(path.join(__dirname, 'accused.html'));
 });
 
+app.get('/accused1', (req, res) => {
+    res.sendFile(path.join(__dirname, 'accused1.html'));
+});
+
+app.get('/accused2', (req, res) => {
+    res.sendFile(path.join(__dirname, 'accused2.html'));
+});
+
 app.get('/investigator', (req, res) => {
     res.sendFile(path.join(__dirname, 'investigator.html'));
+});
+
+app.get('/investigator1', (req, res) => {
+    res.sendFile(path.join(__dirname, 'investigator1.html'));
+});
+
+app.get('/investigator2', (req, res) => {
+    res.sendFile(path.join(__dirname, 'investigator2.html'));
 });
 
 // Créer le serveur HTTP
@@ -83,7 +99,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 // Créer le serveur WebSocket
 const wss = new WebSocket.Server({ server });
 
-// État du jeu
+// État du jeu multi-joueurs (2v2)
 let gameState = {
     teams: {
         A: { score: 0, answers: [] },
@@ -94,9 +110,18 @@ let gameState = {
     questionIndex: 0,
     status: 'waiting',
     connections: {
-        accused: [],
-        investigators: []
-    }
+        accused1: [],
+        accused2: [],
+        investigator1: [],
+        investigator2: []
+    },
+    players: {
+        investigator1: { connected: false, name: 'Enquêteur 1', currentQuestion: '', team: 'A' },
+        investigator2: { connected: false, name: 'Enquêteur 2', currentQuestion: '', team: 'B' },
+        accused1: { connected: false, name: 'Accusé 1', assignedTo: 'investigator1' },
+        accused2: { connected: false, name: 'Accusé 2', assignedTo: 'investigator2' }
+    },
+    currentActiveInvestigator: 'investigator1' // Qui contrôle actuellement
 };
 
 // Fonction pour sauvegarder l'état persistant
@@ -107,9 +132,13 @@ function getPersistentState() {
         currentQuestion: gameState.currentQuestion,
         questionIndex: gameState.questionIndex,
         status: gameState.status,
+        players: gameState.players,
+        currentActiveInvestigator: gameState.currentActiveInvestigator,
         connectionsCount: {
-            accused: gameState.connections.accused.length,
-            investigators: gameState.connections.investigators.length
+            accused1: gameState.connections.accused1.length,
+            accused2: gameState.connections.accused2.length,
+            investigator1: gameState.connections.investigator1.length,
+            investigator2: gameState.connections.investigator2.length
         }
     };
 }
@@ -122,6 +151,8 @@ function restorePersistentState(persistentData) {
         gameState.currentQuestion = persistentData.currentQuestion || gameState.currentQuestion;
         gameState.questionIndex = persistentData.questionIndex || gameState.questionIndex;
         gameState.status = persistentData.status || gameState.status;
+        gameState.players = persistentData.players || gameState.players;
+        gameState.currentActiveInvestigator = persistentData.currentActiveInvestigator || gameState.currentActiveInvestigator;
     }
 }
 
@@ -140,17 +171,52 @@ const questions = [
 
 // Fonction pour diffuser un message à tous les clients d'un type
 function broadcastToType(type, message) {
-    gameState.connections[type].forEach(ws => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(message));
-        }
-    });
+    if (gameState.connections[type]) {
+        gameState.connections[type].forEach(ws => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+            }
+        });
+    }
+}
+
+// Fonction pour diffuser à tous les enquêteurs
+function broadcastToInvestigators(message) {
+    broadcastToType('investigator1', message);
+    broadcastToType('investigator2', message);
+}
+
+// Fonction pour diffuser à tous les accusés
+function broadcastToAccused(message) {
+    broadcastToType('accused1', message);
+    broadcastToType('accused2', message);
 }
 
 // Fonction pour diffuser à tous les clients
 function broadcastToAll(message) {
-    broadcastToType('accused', message);
-    broadcastToType('investigators', message);
+    broadcastToAccused(message);
+    broadcastToInvestigators(message);
+}
+
+// Fonction pour diffuser à une paire spécifique (enquêteur + son accusé)
+function broadcastToPair(investigatorNum, message) {
+    broadcastToType(`investigator${investigatorNum}`, message);
+    broadcastToType(`accused${investigatorNum}`, message);
+}
+
+// Fonctions utilitaires
+function getConnectionCounts() {
+    return {
+        accused1: gameState.connections.accused1.length,
+        accused2: gameState.connections.accused2.length,
+        investigator1: gameState.connections.investigator1.length,
+        investigator2: gameState.connections.investigator2.length
+    };
+}
+
+function logConnections() {
+    const counts = getConnectionCounts();
+    console.log(`📊 Connexions: Enquêteur1(${counts.investigator1}) + Accusé1(${counts.accused1}) | Enquêteur2(${counts.investigator2}) + Accusé2(${counts.accused2})`);
 }
 
 // Gestion des connexions WebSocket
@@ -165,21 +231,49 @@ wss.on('connection', (ws, req) => {
             switch (message.type) {
                 case 'register':
                     // Enregistrer le client selon son rôle
-                    if (message.role === 'accused') {
-                        gameState.connections.accused.push(ws);
-                        ws.role = 'accused';
-                    } else if (message.role === 'investigator') {
-                        gameState.connections.investigators.push(ws);
-                        ws.role = 'investigator';
+                    let role = message.role;
+                    
+                    // Gérer les rôles génériques et les assigner automatiquement
+                    if (role === 'accused') {
+                        // Assigner automatiquement à accused1 ou accused2 selon la disponibilité
+                        if (gameState.connections.accused1.length === 0) {
+                            role = 'accused1';
+                        } else if (gameState.connections.accused2.length === 0) {
+                            role = 'accused2';
+                        } else {
+                            // Si les deux sont occupés, assigner à celui avec moins de connexions
+                            role = gameState.connections.accused1.length <= gameState.connections.accused2.length ? 'accused1' : 'accused2';
+                        }
+                    } else if (role === 'investigator') {
+                        // Assigner automatiquement à investigator1 ou investigator2 selon la disponibilité
+                        if (gameState.connections.investigator1.length === 0) {
+                            role = 'investigator1';
+                        } else if (gameState.connections.investigator2.length === 0) {
+                            role = 'investigator2';
+                        } else {
+                            // Si les deux sont occupés, assigner à celui avec moins de connexions
+                            role = gameState.connections.investigator1.length <= gameState.connections.investigator2.length ? 'investigator1' : 'investigator2';
+                        }
+                    }
+                    
+                    if (gameState.connections[role]) {
+                        gameState.connections[role].push(ws);
+                        ws.role = role;
+                        
+                        // Marquer le joueur comme connecté
+                        if (gameState.players[role]) {
+                            gameState.players[role].connected = true;
+                        }
+                    } else {
+                        console.log('⚠️ Rôle non reconnu:', role);
+                        return;
                     }
                     
                     // Envoyer l'état initial complet avec données persistantes
                     const fullGameState = {
                         ...getPersistentState(),
-                        connections: {
-                            accused: gameState.connections.accused.length,
-                            investigators: gameState.connections.investigators.length
-                        }
+                        myRole: role,
+                        connections: getConnectionCounts()
                     };
                     
                     ws.send(JSON.stringify({
@@ -187,15 +281,15 @@ wss.on('connection', (ws, req) => {
                         data: fullGameState
                     }));
                     
-                    console.log(`✅ Client enregistré comme ${message.role}`);
-                    console.log(`📊 Connexions: ${gameState.connections.accused.length} accusés, ${gameState.connections.investigators.length} enquêteurs`);
+                    console.log(`✅ Client enregistré comme ${role}`);
+                    logConnections();
                     
-                    // Notifier les autres clients du changement de connexion
-                    broadcastToType('investigators', {
+                    // Notifier tous les enquêteurs du changement de connexion
+                    broadcastToInvestigators({
                         type: 'connectionUpdate',
                         data: {
-                            accused: gameState.connections.accused.length,
-                            investigators: gameState.connections.investigators.length
+                            connections: getConnectionCounts(),
+                            players: gameState.players
                         }
                     });
                     break;
@@ -353,6 +447,24 @@ wss.on('connection', (ws, req) => {
                     saveStateToDisk();
                     break;
 
+                case 'toggleTeam':
+                    // Changer l'équipe active
+                    const newActiveTeam = message.activeTeam;
+                    if (newActiveTeam === 'A' || newActiveTeam === 'B') {
+                        gameState.activeTeam = newActiveTeam;
+                        
+                        broadcastToAll({
+                            type: 'teamToggle',
+                            data: { activeTeam: newActiveTeam }
+                        });
+                        
+                        console.log(`🔄 Équipe active changée vers: ${newActiveTeam}`);
+                        
+                        // Sauvegarder l'état après modification
+                        saveStateToDisk();
+                    }
+                    break;
+
                 default:
                     console.log('⚠️ Type de message non reconnu:', message.type);
             }
@@ -362,29 +474,43 @@ wss.on('connection', (ws, req) => {
     });
 
     ws.on('close', () => {
-        // Nettoyer les connexions fermées
-        const wasAccused = ws.role === 'accused';
-        const wasInvestigator = ws.role === 'investigator';
-        
-        if (wasAccused) {
-            gameState.connections.accused = gameState.connections.accused.filter(client => client !== ws);
-        } else if (wasInvestigator) {
-            gameState.connections.investigators = gameState.connections.investigators.filter(client => client !== ws);
+        // Nettoyer les connexions fermées selon le nouveau système de rôles
+        if (ws.role === 'accused1') {
+            gameState.connections.accused1 = gameState.connections.accused1.filter(client => client !== ws);
+            gameState.players.accused1.connected = gameState.connections.accused1.length > 0;
+        } else if (ws.role === 'accused2') {
+            gameState.connections.accused2 = gameState.connections.accused2.filter(client => client !== ws);
+            gameState.players.accused2.connected = gameState.connections.accused2.length > 0;
+        } else if (ws.role === 'investigator1') {
+            gameState.connections.investigator1 = gameState.connections.investigator1.filter(client => client !== ws);
+            gameState.players.investigator1.connected = gameState.connections.investigator1.length > 0;
+        } else if (ws.role === 'investigator2') {
+            gameState.connections.investigator2 = gameState.connections.investigator2.filter(client => client !== ws);
+            gameState.players.investigator2.connected = gameState.connections.investigator2.length > 0;
         }
         
         console.log(`🔌 Connexion fermée (${ws.role || 'inconnu'})`);
-        console.log(`📊 Connexions restantes: ${gameState.connections.accused.length} accusés, ${gameState.connections.investigators.length} enquêteurs`);
+        console.log(`📊 Connexions restantes:`, {
+            accused1: gameState.connections.accused1.length,
+            accused2: gameState.connections.accused2.length,
+            investigator1: gameState.connections.investigator1.length,
+            investigator2: gameState.connections.investigator2.length
+        });
         
-        // Notifier les autres clients du changement de connexion
-        if (wasAccused || wasInvestigator) {
-            broadcastToType('investigators', {
-                type: 'connectionUpdate',
-                data: {
-                    accused: gameState.connections.accused.length,
-                    investigators: gameState.connections.investigators.length
-                }
-            });
-        }
+        // Notifier tous les clients du changement de connexion
+        const connectionStatus = {
+            accused1: gameState.connections.accused1.length > 0,
+            accused2: gameState.connections.accused2.length > 0,
+            investigator1: gameState.connections.investigator1.length > 0,
+            investigator2: gameState.connections.investigator2.length > 0
+        };
+        
+        broadcastToAll({
+            type: 'connectionUpdate',
+            data: {
+                connections: connectionStatus
+            }
+        });
     });
 
     ws.on('error', (error) => {
@@ -394,8 +520,10 @@ wss.on('connection', (ws, req) => {
 
 // Nettoyage périodique des connexions fermées
 setInterval(() => {
-    gameState.connections.accused = gameState.connections.accused.filter(ws => ws.readyState === WebSocket.OPEN);
-    gameState.connections.investigators = gameState.connections.investigators.filter(ws => ws.readyState === WebSocket.OPEN);
+    gameState.connections.accused1 = gameState.connections.accused1.filter(ws => ws.readyState === WebSocket.OPEN);
+    gameState.connections.accused2 = gameState.connections.accused2.filter(ws => ws.readyState === WebSocket.OPEN);
+    gameState.connections.investigator1 = gameState.connections.investigator1.filter(ws => ws.readyState === WebSocket.OPEN);
+    gameState.connections.investigator2 = gameState.connections.investigator2.filter(ws => ws.readyState === WebSocket.OPEN);
 }, 30000);
 
 console.log('🎮 Serveur de jeu Alibi démarré');

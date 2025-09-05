@@ -1,31 +1,48 @@
 {
   "teams": {
     "A": {
-      "score": 2,
-      "answers": [
-        {
-          "question": "Qui était avec vous ce jour-là ?",
-          "correct": true,
-          "timestamp": "2025-09-04T15:08:05.353Z"
-        },
-        {
-          "question": "Qui était avec vous ce jour-là ?",
-          "correct": true,
-          "timestamp": "2025-09-04T15:08:06.399Z"
-        }
-      ]
+      "score": 0,
+      "answers": []
     },
     "B": {
       "score": 0,
       "answers": []
     }
   },
-  "activeTeam": "A",
-  "currentQuestion": "Qui était avec vous ce jour-là ?",
-  "questionIndex": 1,
+  "activeTeam": "B",
+  "currentQuestion": "Qu'avez-vous fait exactement ?",
+  "questionIndex": 2,
   "status": "playing",
+  "players": {
+    "investigator1": {
+      "connected": true,
+      "name": "Enquêteur 1",
+      "currentQuestion": "",
+      "team": "A"
+    },
+    "investigator2": {
+      "connected": true,
+      "name": "Enquêteur 2",
+      "currentQuestion": "",
+      "team": "B"
+    },
+    "accused1": {
+      "connected": true,
+      "name": "Accusé 1",
+      "assignedTo": "investigator1"
+    },
+    "accused2": {
+      "connected": true,
+      "name": "Accusé 2",
+      "assignedTo": "investigator2"
+    }
+  },
+  "currentActiveInvestigator": "investigator1",
   "connectionsCount": {
-    "accused": 1,
-    "investigators": 2
-  }
+    "accused1": 1,
+    "accused2": 1,
+    "investigator1": 1,
+    "investigator2": 1
+  },
+  "lastSaved": "2025-09-05T11:31:56.542Z"
 }
