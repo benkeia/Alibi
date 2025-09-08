@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room - Alibi Game</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .room-container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      text-align: center;
+    }
+    
+    .room-code {
+      font-size: 3em;
+      font-weight: bold;
+      color: #00ff41;
+      margin: 20px 0;
+      letter-spacing: 0.2em;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .room-info {
+      margin: 30px 0;
+    }
+    
+    .player-count {
+      font-size: 1.2em;
+      margin: 10px 0;
+    }
+    
+    .role-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    
+    .role-btn {
+      padding: 15px 30px;
+      font-size: 1.1em;
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .role-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    }
+    
+    .role-btn.investigator {
+      background: linear-gradient(45deg, #4834d4, #6c5ce7);
+    }
+    
+    .role-btn.investigator:hover {
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    .share-section {
+      margin: 40px 0;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    
+    .url-input {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #444;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      color: white;
+      width: 300px;
+      font-family: monospace;
+    }
+    
+    .copy-btn {
+      background: #2ed573;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #2ed573;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="room-container">
+    <h1>🎮 Room Alibi</h1>
+    
+    <div class="room-code" id="room-code">
+      <!-- Code sera injecté par JS -->
+    </div>
+    
+    <div class="room-info">
+      <div class="player-count">
+        <span class="status-indicator"></span>
+        <span id="player-count">0 joueurs connectés</span>
+      </div>
+      <div id="room-status">En attente de joueurs...</div>
+    </div>
+    
+    <div class="role-buttons">
+      <a href="#" class="role-btn investigator" id="investigator-btn">
+        🔍 Rejoindre comme Enquêteur
+      </a>
+      <a href="#" class="role-btn" id="accused-btn">
+        🎭 Rejoindre comme Accusé
+      </a>
+    </div>
+    
+    <div class="share-section">
+      <h3>📤 Partager cette room</h3>
+      <p>Envoyez ces liens aux autres joueurs :</p>
+      
+      <div>
+        <label>Lien Enquêteur :</label><br>
+        <input type="text" class="url-input" id="investigator-url" readonly>
+        <button class="copy-btn" onclick="copyUrl('investigator-url')">Copier</button>
+      </div>
+      
+      <div>
+        <label>Lien Accusé :</label><br>
+        <input type="text" class="url-input" id="accused-url" readonly>
+        <button class="copy-btn" onclick="copyUrl('accused-url')">Copier</button>
+      </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+      <a href="/" style="color: #888; text-decoration: none;">← Retour à l'accueil</a>
+    </div>
+  </div>
+
+  <script>
+    // Récupérer le code de room depuis l'URL
+    const pathParts = window.location.pathname.split('/');
+    const roomCode = pathParts[2] || '';
+    
+    // Mettre à jour l'affichage
+    document.getElementById('room-code').textContent = roomCode;
+    
+    // Construire les URLs
+    const baseUrl = window.location.origin;
+    const investigatorUrl = `${baseUrl}/room/${roomCode}/investigator`;
+    const accusedUrl = `${baseUrl}/room/${roomCode}/accused`;
+    
+    // Mettre à jour les liens et champs
+    document.getElementById('investigator-btn').href = investigatorUrl;
+    document.getElementById('accused-btn').href = accusedUrl;
+    document.getElementById('investigator-url').value = investigatorUrl;
+    document.getElementById('accused-url').value = accusedUrl;
+    
+    // Fonction pour copier une URL
+    function copyUrl(inputId) {
+      const input = document.getElementById(inputId);
+      input.select();
+      input.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(input.value).then(() => {
+        const btn = input.nextElementSibling;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copié !';
+        btn.style.background = '#2ed573';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#2ed573';
+        }, 2000);
+      });
+    }
+    
+    // Mettre à jour le nombre de joueurs en temps réel
+    function updateRoomInfo() {
+      fetch(`/api/room/${roomCode}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.exists) {
+            document.getElementById('player-count').textContent = 
+              `${data.playerCount} joueur${data.playerCount > 1 ? 's' : ''} connecté${data.playerCount > 1 ? 's' : ''}`;
+            
+            const statusElement = document.getElementById('room-status');
+            if (data.status === 'playing') {
+              statusElement.textContent = '🎮 Partie en cours';
+              statusElement.style.color = '#2ed573';
+            } else if (data.playerCount === 0) {
+              statusElement.textContent = '⏳ En attente de joueurs...';
+              statusElement.style.color = '#ffa500';
+            } else {
+              statusElement.textContent = '👥 Joueurs connectés - Prêt à commencer';
+              statusElement.style.color = '#2ed573';
+            }
+          } else {
+            document.getElementById('room-status').textContent = '❌ Room introuvable';
+            document.getElementById('room-status').style.color = '#ff6b6b';
+          }
+        })
+        .catch(error => {
+          console.error('Erreur lors de la mise à jour:', error);
+        });
+    }
+    
+    // Mettre à jour toutes les 3 secondes
+    updateRoomInfo();
+    setInterval(updateRoomInfo, 3000);
+  </script>
+</body>
+</html>

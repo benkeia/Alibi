@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enquêteur • Alibi</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="css/investigator.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/investigator.css">
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 </head>
 <body class="investigator-body">
@@ -150,6 +150,11 @@
     // Configuration WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
+    
+    // Détection automatique du code de room depuis l'URL
+    const pathParts = window.location.pathname.split('/');
+    const roomCode = pathParts.length >= 3 && pathParts[1] === 'room' ? pathParts[2] : null;
+    
     let ws = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
@@ -224,10 +229,17 @@
           reconnectAttempts = 0;
           
           // S'enregistrer comme enquêteur
-          ws.send(JSON.stringify({
+          const registerMessage = {
             type: 'register',
             role: 'investigator'
-          }));
+          };
+          
+          // Ajouter le code de room si disponible
+          if (roomCode) {
+            registerMessage.roomCode = roomCode;
+          }
+          
+          ws.send(JSON.stringify(registerMessage));
           
           addLogEntry('Connexion établie - Restauration de l\'état...', 'success');
         };
@@ -327,6 +339,11 @@
     // Envoyer un message WebSocket
     function sendWebSocketMessage(message) {
       if (ws && ws.readyState === WebSocket.OPEN) {
+        // Ajouter automatiquement le roomCode si on est dans une room
+        if (roomCode && !message.roomCode) {
+          message.roomCode = roomCode;
+        }
+        
         ws.send(JSON.stringify(message));
         return true;
       } else {

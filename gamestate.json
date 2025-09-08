@@ -9,9 +9,9 @@
       "answers": []
     }
   },
-  "activeTeam": "B",
-  "currentQuestion": "Qu'avez-vous fait exactement ?",
-  "questionIndex": 2,
+  "activeTeam": "A",
+  "currentQuestion": "Où étiez-vous le 15 mars entre 14h et 16h ?",
+  "questionIndex": 0,
   "status": "playing",
   "players": {
     "investigator1": {
@@ -27,7 +27,7 @@
       "team": "B"
     },
     "accused1": {
-      "connected": true,
+      "connected": false,
       "name": "Accusé 1",
       "assignedTo": "investigator1"
     },
@@ -39,10 +39,10 @@
   },
   "currentActiveInvestigator": "investigator1",
   "connectionsCount": {
-    "accused1": 1,
-    "accused2": 1,
-    "investigator1": 1,
-    "investigator2": 1
+    "accused1": 0,
+    "accused2": 0,
+    "investigator1": 0,
+    "investigator2": 0
   },
-  "lastSaved": "2025-09-05T11:31:56.542Z"
+  "lastSaved": "2025-09-05T12:20:40.099Z"
 }

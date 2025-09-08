@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accusé • Alibi</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="css/accuse.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/accuse.css">
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 </head>
 <body class="accused-body">
@@ -96,6 +96,11 @@
     // Configuration WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
+    
+    // Détection automatique du code de room depuis l'URL
+    const pathParts = window.location.pathname.split('/');
+    const roomCode = pathParts.length >= 3 && pathParts[1] === 'room' ? pathParts[2] : null;
+    
     let ws = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
@@ -142,10 +147,17 @@
           reconnectAttempts = 0;
           
           // S'enregistrer comme accusé
-          ws.send(JSON.stringify({
+          const registerMessage = {
             type: 'register',
             role: 'accused'
-          }));
+          };
+          
+          // Ajouter le code de room si disponible
+          if (roomCode) {
+            registerMessage.roomCode = roomCode;
+          }
+          
+          ws.send(JSON.stringify(registerMessage));
           
           console.log('📡 Enregistrement envoyé - En attente de l\'état du jeu...');
         };

@@ -181,47 +181,23 @@ function handleRoomMessage(roomCode, message, ws) {
             
             broadcastToAllInRoom(roomCode, {
                 type: 'questionUpdate',
-                data: {
-                    question: room.currentQuestion,
-                    questionIndex: room.questionIndex
-                }
+                question: room.currentQuestion,
+                questionIndex: room.questionIndex
             });
             break;
             
-        case 'changeQuestion':
-            // Utiliser la question personnalisée fournie par l'enquêteur
-            if (message.question && message.question.trim()) {
-                room.currentQuestion = message.question.trim();
-                // Ne pas changer questionIndex pour les questions personnalisées
-                
-                broadcastToAllInRoom(roomCode, {
-                    type: 'questionUpdate',
-                    data: {
-                        question: room.currentQuestion,
-                        questionIndex: room.questionIndex,
-                        isCustom: true
-                    }
-                });
-            }
-            break;
-            
         case 'resetGame':
-        case 'resetAll':
             room.questionIndex = 0;
             room.currentQuestion = questions[0];
             room.teams.A.score = 0;
             room.teams.B.score = 0;
-            room.teams.A.answers = [];
-            room.teams.B.answers = [];
-            room.activeTeam = 'A';
             
             broadcastToAllInRoom(roomCode, {
                 type: 'gameReset',
                 scoreA: room.teams.A.score,
                 scoreB: room.teams.B.score,
                 question: room.currentQuestion,
-                questionIndex: room.questionIndex,
-                activeTeam: room.activeTeam
+                questionIndex: room.questionIndex
             });
             break;
             
@@ -244,78 +220,7 @@ function handleRoomMessage(roomCode, message, ws) {
                         answers: room.teams[team].answers
                     }
                 });
-                
-                broadcastToAllInRoom(roomCode, {
-                    type: 'feedback',
-                    data: {
-                        isCorrect: message.isCorrect,
-                        team: team
-                    }
-                });
             }
-            break;
-            
-        case 'resetTeam':
-            const resetTeam = message.team;
-            if (room.teams[resetTeam]) {
-                room.teams[resetTeam].score = 0;
-                room.teams[resetTeam].answers = [];
-                
-                broadcastToAllInRoom(roomCode, {
-                    type: 'teamReset',
-                    data: { team: resetTeam }
-                });
-            }
-            break;
-            
-        case 'answer':
-            const feedback = {
-                type: 'feedback',
-                data: {
-                    isCorrect: message.isCorrect,
-                    team: room.activeTeam
-                }
-            };
-            broadcastToAllInRoom(roomCode, feedback);
-            
-            if (message.isCorrect !== undefined) {
-                if (message.isCorrect) {
-                    room.teams[room.activeTeam].score++;
-                }
-                room.teams[room.activeTeam].answers.push({
-                    question: room.currentQuestion,
-                    correct: message.isCorrect,
-                    timestamp: new Date().toISOString()
-                });
-            }
-            break;
-            
-        case 'toggleActiveTeam':
-            room.activeTeam = room.activeTeam === 'A' ? 'B' : 'A';
-            
-            broadcastToAllInRoom(roomCode, {
-                type: 'teamToggle',
-                data: { activeTeam: room.activeTeam }
-            });
-            break;
-            
-        case 'startGame':
-            room.status = 'playing';
-            broadcastToAllInRoom(roomCode, {
-                type: 'gameStart',
-                data: { status: room.status }
-            });
-            break;
-            
-        case 'endGame':
-            room.status = 'ended';
-            broadcastToAllInRoom(roomCode, {
-                type: 'gameEnd',
-                data: { 
-                    status: room.status,
-                    finalScores: room.teams
-                }
-            });
             break;
     }
 }
@@ -349,10 +254,8 @@ function handleGlobalMessage(message, ws) {
             
             broadcastToAll({
                 type: 'questionUpdate',
-                data: {
-                    question: gameState.currentQuestion,
-                    questionIndex: gameState.questionIndex
-                }
+                question: gameState.currentQuestion,
+                questionIndex: gameState.questionIndex
             });
             break;
             
@@ -425,14 +328,6 @@ app.get('/api/room/:code', (req, res) => {
 });
 
 // Routes avec room code
-app.get('/room/:code', (req, res) => {
-    const roomCode = req.params.code.toUpperCase();
-    if (!rooms.has(roomCode)) {
-        return res.redirect('/?error=room_not_found');
-    }
-    res.sendFile(path.join(__dirname, 'room.html'));
-});
-
 app.get('/room/:code/accused', (req, res) => {
     const roomCode = req.params.code.toUpperCase();
     if (!rooms.has(roomCode)) {
@@ -634,14 +529,10 @@ wss.on('connection', (ws, req) => {
                     break;
                     
                 default:
-                    // Router les autres messages - utiliser roomCode du message ou de la connexion
-                    const targetRoomCode = roomCode || ws.roomCode;
-                    
-                    if (targetRoomCode) {
-                        console.log(`📨 Routage vers room ${targetRoomCode}:`, message);
-                        handleRoomMessage(targetRoomCode, message, ws);
+                    // Router les autres messages
+                    if (roomCode) {
+                        handleRoomMessage(roomCode, message, ws);
                     } else {
-                        console.log(`📨 Routage global:`, message);
                         handleGlobalMessage(message, ws);
                     }
                     break;
