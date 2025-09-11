@@ -44,6 +44,14 @@
               <option value="">Choisir un alibi...</option>
             </select>
           </div>
+            <div class="alibi-timer-selection">
+              <label for="alibi-timer-select">Temps d'alibi:</label>
+              <select id="alibi-timer-select">
+                <option value="30">30 secondes</option>
+                <option value="45">45 secondes</option>
+                <option value="60" selected>60 secondes</option>
+              </select>
+            </div>
           <div class="players-input">
             <label for="player1-name">Joueur 1:</label>
             <input type="text" id="player1-name" placeholder="Nom du joueur 1">
@@ -350,6 +358,8 @@
         .replace(/\[Joueur 1\]/g, player1Name)
         .replace(/\[Joueur 2\]/g, player2Name);
       
+        // Récupérer le temps d'alibi choisi
+        const alibiTimerValue = parseInt(document.getElementById('alibi-timer-select').value, 10) || 60;
       // Envoyer l'alibi aux accusés
       if (sendWebSocketMessage({
         type: 'startAlibiPhase',
@@ -358,15 +368,16 @@
         player1: player1Name,
         player2: player2Name,
         crime: selectedCrime.title
+          ,alibiTimer: alibiTimerValue
       })) {
         addLogEntry(`Phase alibi démarrée pour ${player1Name} et ${player2Name}`, 'success');
         
         // Masquer le panneau de sélection de crime
         document.getElementById('crime-selection-panel').style.display = 'none';
         
-        // Afficher un message d'attente
-        addLogEntry('Les accusés lisent leur alibi (60 secondes)...', 'info');
-        addLogEntry('L\'interrogatoire commencera automatiquement après', 'info');
+          // Afficher un message d'attente avec le temps choisi
+          addLogEntry(`Les accusés lisent leur alibi (${alibiTimerValue} secondes)...`, 'info');
+          addLogEntry('L\'interrogatoire commencera automatiquement après', 'info');
       }
     }
 

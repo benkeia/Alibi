@@ -16,6 +16,14 @@
     <span class="status-text" id="status-text">Connexion...</span>
   </div>
 
+  <!-- Notification d'activation audio -->
+  <div class="audio-activation-notice" id="audio-activation-notice">
+    <div class="audio-notice-content">
+      <p>🔊 Cliquez n'importe où pour activer les sons</p>
+      <small>Les navigateurs nécessitent une interaction pour jouer les sons</small>
+    </div>
+  </div>
+
   <!-- Info de partie -->
   <div class="room-info" id="room-info">
     <div>Interrogatoire: <span id="room-code-display">ALIBI-GAME</span></div>
@@ -49,11 +57,19 @@
   <!-- Overlay de flash pour les animations -->
   <div class="flash-overlay" id="flash-overlay"></div>
 
+  <!-- Éléments audio pour les feedbacks -->
+  <audio id="correct-sound" preload="auto">
+    <source src="/sounds/right.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="incorrect-sound" preload="auto">
+    <source src="/sounds/wrong.mp3" type="audio/mpeg">
+  </audio>
+
   <!-- Écran principal -->
   <main class="accused-main">
     <!-- Section d'affichage de l'alibi -->
     <section class="alibi-display-screen" id="alibi-display-screen" style="display: none;">
-      <div class="alibi-timer" id="alibi-timer">60</div>
+      <div class="alibi-timer" id="alibi-timer">30</div>
       <div class="alibi-crime-title" id="alibi-crime-title">Crime</div>
       <div class="alibi-players" id="alibi-players">
         <span id="player1-display">Joueur 1</span> et <span id="player2-display">Joueur 2</span>
@@ -156,7 +172,11 @@
 
     // Variables pour la phase alibi
     let alibiTimer = null;
-    let alibiTimeLeft = 60;
+    let alibiTimeLeft = 30;
+
+    // Variables pour la gestion audio
+    let audioEnabled = false;
+    let audioActivationShown = true; // Déjà affiché dès le début
 
     // Éléments DOM
     const elements = {
@@ -184,7 +204,8 @@
       alibiContent: document.getElementById('alibi-content'),
       player1Display: document.getElementById('player1-display'),
       player2Display: document.getElementById('player2-display'),
-      alibiSection: document.getElementById('alibi-section')
+      alibiSection: document.getElementById('alibi-section'),
+      audioActivationNotice: document.getElementById('audio-activation-notice')
     };
 
     // Connexion WebSocket
@@ -456,6 +477,9 @@
     function triggerFeedback(isCorrect) {
       const body = document.body;
       
+      // Jouer le son approprié
+      playFeedbackSound(isCorrect);
+      
       if (isCorrect) {
         // Effet de succès
         elements.flashOverlay.className = 'flash-overlay success';
@@ -488,10 +512,69 @@
       }
     }
 
+    // Fonction pour jouer les sons de feedback
+    function playFeedbackSound(isCorrect) {
+      if (!audioEnabled) {
+        return; // Ne pas essayer de jouer si l'audio n'est pas activé
+      }
+      
+      try {
+        const soundElement = isCorrect ? 
+          document.getElementById('correct-sound') : 
+          document.getElementById('incorrect-sound');
+        
+        if (soundElement) {
+          soundElement.currentTime = 0; // Remettre au début
+          soundElement.volume = 0.7; // Volume à 70%
+          soundElement.play().catch(error => {
+            console.warn('Impossible de jouer le son:', error);
+            // Si on ne peut toujours pas jouer, désactiver l'audio
+            audioEnabled = false;
+          });
+        }
+      } catch (error) {
+        console.warn('Erreur lors de la lecture du son:', error);
+        audioEnabled = false;
+      }
+    }
+
+    // Fonction pour activer l'audio après interaction utilisateur
+    function enableAudio() {
+      if (audioEnabled) return;
+      
+      try {
+        // Tenter de jouer un son muet pour débloquer l'audio
+        const testAudio = document.getElementById('correct-sound');
+        if (testAudio) {
+          testAudio.volume = 0; // Muet pour le test
+          testAudio.play().then(() => {
+            testAudio.pause();
+            testAudio.currentTime = 0;
+            testAudio.volume = 0.7; // Remettre le volume normal
+            audioEnabled = true;
+            elements.audioActivationNotice.style.display = 'none';
+            console.log('✅ Audio activé');
+          }).catch(error => {
+            console.warn('Impossible d\'activer l\'audio:', error);
+          });
+        }
+      } catch (error) {
+        console.warn('Erreur lors de l\'activation audio:', error);
+      }
+    }
+
     // Initialisation
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🎮 Page Accusé initialisée');
       connectWebSocket();
+      
+      // Afficher la notification d'activation audio dès le début
+      elements.audioActivationNotice.style.display = 'block';
+      
+      // Ajouter des écouteurs pour activer l'audio sur interaction
+      ['click', 'touch', 'keydown'].forEach(eventType => {
+        document.addEventListener(eventType, enableAudio, { once: false });
+      });
     });
 
     // Gestion de la fermeture de la page
@@ -530,7 +613,7 @@
       elements.alibiDisplayScreen.style.display = 'flex';
       
       // Démarrer le timer
-      alibiTimeLeft = 60;
+      alibiTimeLeft = 30;
       startAlibiTimer();
     }
 
@@ -542,9 +625,9 @@
         elements.alibiTimer.textContent = alibiTimeLeft;
         
         // Changer la couleur du timer selon le temps restant
-        if (alibiTimeLeft <= 10) {
+        if (alibiTimeLeft <= 5) {
           elements.alibiTimer.className = 'alibi-timer danger';
-        } else if (alibiTimeLeft <= 20) {
+        } else if (alibiTimeLeft <= 10) {
           elements.alibiTimer.className = 'alibi-timer warning';
         } else {
           elements.alibiTimer.className = 'alibi-timer';
