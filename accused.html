@@ -51,6 +51,18 @@
 
   <!-- Écran principal -->
   <main class="accused-main">
+    <!-- Section d'affichage de l'alibi -->
+    <section class="alibi-display-screen" id="alibi-display-screen" style="display: none;">
+      <div class="alibi-timer" id="alibi-timer">60</div>
+      <div class="alibi-crime-title" id="alibi-crime-title">Crime</div>
+      <div class="alibi-players" id="alibi-players">
+        <span id="player1-display">Joueur 1</span> et <span id="player2-display">Joueur 2</span>
+      </div>
+      <div class="alibi-content" id="alibi-content">
+        Votre alibi s'affiche ici...
+      </div>
+    </section>
+
     <!-- Section d'attente -->
     <section class="waiting-screen" id="waiting-screen">
       <h1 class="accused-title">
@@ -70,6 +82,12 @@
         <div class="question-text" id="current-question">
           En attente d'une question...
         </div>
+      </div>
+
+      <!-- Section alibi -->
+      <div class="alibi-section" id="alibi-section" style="display: none;">
+        <h2>📜 Votre Alibi</h2>
+        <p id="alibiFull" class="alibi-text">Chargement de votre alibi...</p>
       </div>
     </section>
 
@@ -105,6 +123,29 @@
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
 
+    // Charger la configuration de jeu depuis localStorage
+    let gameConfig = null;
+    try {
+      const savedConfig = localStorage.getItem('gameConfig');
+      if (savedConfig) {
+        gameConfig = JSON.parse(savedConfig);
+        console.log('Configuration de jeu chargée:', gameConfig);
+        
+        // Afficher l'alibi configuré
+        if (gameConfig.alibi && gameConfig.alibi.text) {
+          document.getElementById('alibiFull').textContent = gameConfig.alibi.text;
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration:', error);
+    }
+
+    // Si aucune configuration n'est trouvée, utiliser un alibi par défaut
+    if (!gameConfig || !gameConfig.alibi) {
+      document.getElementById('alibiFull').textContent = 
+        "Le 15 mars, j'étais chez ma grand-mère pour l'aider à faire ses courses. Nous avons pris le bus ensemble vers 14h30 pour aller au marché de la place du village. Elle voulait acheter des légumes frais pour préparer le repas du dimanche. Nous avons passé environ une heure et demie au marché, puis nous sommes rentrées chez elle vers 16h15. J'ai aidé à ranger les courses et nous avons pris le thé ensemble avant que je reparte chez moi vers 17h.";
+    }
+
     // État local
     let gameState = {
       teams: { A: { score: 0 }, B: { score: 0 } },
@@ -112,6 +153,10 @@
       currentQuestion: '',
       status: 'waiting'
     };
+
+    // Variables pour la phase alibi
+    let alibiTimer = null;
+    let alibiTimeLeft = 60;
 
     // Éléments DOM
     const elements = {
@@ -121,6 +166,7 @@
       waitingScreen: document.getElementById('waiting-screen'),
       gameScreen: document.getElementById('game-screen'),
       endScreen: document.getElementById('end-screen'),
+      alibiDisplayScreen: document.getElementById('alibi-display-screen'),
       currentQuestion: document.getElementById('current-question'),
       teamAScore: document.getElementById('team-a-score'),
       teamBScore: document.getElementById('team-b-score'),
@@ -131,7 +177,14 @@
       flashOverlay: document.getElementById('flash-overlay'),
       finalScoreA: document.getElementById('final-score-a'),
       finalScoreB: document.getElementById('final-score-b'),
-      endMessage: document.getElementById('end-message')
+      endMessage: document.getElementById('end-message'),
+      alibiTimer: document.getElementById('alibi-timer'),
+      alibiCrimeTitle: document.getElementById('alibi-crime-title'),
+      alibiPlayers: document.getElementById('alibi-players'),
+      alibiContent: document.getElementById('alibi-content'),
+      player1Display: document.getElementById('player1-display'),
+      player2Display: document.getElementById('player2-display'),
+      alibiSection: document.getElementById('alibi-section')
     };
 
     // Connexion WebSocket
@@ -250,6 +303,11 @@
         case 'gameEnd':
           // Fin du jeu
           endGame(message.data.finalScores);
+          break;
+
+        case 'startAlibiPhase':
+          // Démarrage de la phase alibi
+          startAlibiPhase(message.data);
           break;
 
         default:
@@ -442,6 +500,100 @@
         ws.close();
       }
     });
+
+    // Fonctions pour la phase alibi
+    function startAlibiPhase(data) {
+      console.log('🎭 Démarrage de la phase alibi:', data);
+      
+      // Afficher les informations de l'alibi
+      elements.alibiCrimeTitle.textContent = data.crime;
+      elements.player1Display.textContent = data.player1;
+      elements.player2Display.textContent = data.player2;
+      elements.alibiContent.textContent = data.alibiText;
+      
+      // Mettre à jour les questions prédéfinies pour plus tard
+      if (data.questions) {
+        // Stocker les questions dans localStorage pour usage ultérieur
+        localStorage.setItem('alibiQuestions', JSON.stringify(data.questions));
+      }
+      
+      // Cacher TOUS les autres éléments pendant la phase alibi
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'none';
+      elements.endScreen.style.display = 'none';
+      elements.connectionStatus.style.display = 'none';
+      elements.roomInfo.style.display = 'none';
+      elements.teamScoreA.style.display = 'none';
+      elements.teamScoreB.style.display = 'none';
+      
+      // Afficher uniquement l'écran alibi
+      elements.alibiDisplayScreen.style.display = 'flex';
+      
+      // Démarrer le timer
+      alibiTimeLeft = 60;
+      startAlibiTimer();
+    }
+
+    function startAlibiTimer() {
+      elements.alibiTimer.textContent = alibiTimeLeft;
+      
+      alibiTimer = setInterval(() => {
+        alibiTimeLeft--;
+        elements.alibiTimer.textContent = alibiTimeLeft;
+        
+        // Changer la couleur du timer selon le temps restant
+        if (alibiTimeLeft <= 10) {
+          elements.alibiTimer.className = 'alibi-timer danger';
+        } else if (alibiTimeLeft <= 20) {
+          elements.alibiTimer.className = 'alibi-timer warning';
+        } else {
+          elements.alibiTimer.className = 'alibi-timer';
+        }
+        
+        // Fin du timer
+        if (alibiTimeLeft <= 0) {
+          clearInterval(alibiTimer);
+          endAlibiPhase();
+        }
+      }, 1000);
+    }
+
+    function endAlibiPhase() {
+      console.log('⏰ Fin de la phase alibi');
+      
+      // Cacher complètement l'écran alibi
+      elements.alibiDisplayScreen.style.display = 'none';
+      
+      // Restaurer l'affichage normal SAUF la section alibi qui doit rester cachée
+      elements.connectionStatus.style.display = 'block';
+      elements.roomInfo.style.display = 'block';
+      elements.teamScoreA.style.display = 'block';
+      elements.teamScoreB.style.display = 'block';
+      elements.gameScreen.style.display = 'block';
+      elements.alibiSection.style.display = 'none'; // Garder l'alibi caché pendant les questions
+      
+      // Charger les questions de l'alibi depuis localStorage
+      try {
+        const alibiQuestions = localStorage.getItem('alibiQuestions');
+        if (alibiQuestions) {
+          const questions = JSON.parse(alibiQuestions);
+          console.log('📋 Questions d\'alibi chargées:', questions);
+          
+          // Notifier l'enquêteur que les questions d'alibi sont prêtes
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'alibiQuestionsReady',
+              questions: questions
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des questions d\'alibi:', error);
+      }
+      
+      // Mettre à jour le statut
+      elements.statusText.textContent = 'Connecté • Interrogatoire en cours';
+    }
   </script>
 </body>
 </html>

@@ -25,8 +25,41 @@
 
     <!-- Panneau de contrôle principal -->
     <section class="control-panel">
+      <!-- Phase de sélection de crime -->
+      <div class="crime-selection-panel" id="crime-selection-panel">
+        <h3>Sélection du Crime</h3>
+        <div class="crime-selection-grid">
+          <div class="crime-selection-item">
+            <label for="crime-select">Crime:</label>
+            <select id="crime-select" onchange="selectCrime()">
+              <option value="">Choisir un crime...</option>
+            </select>
+          </div>
+          <div class="crime-description" id="crime-description">
+            Sélectionnez un crime pour voir la description
+          </div>
+          <div class="alibi-selection">
+            <label for="alibi-select">Alibi:</label>
+            <select id="alibi-select" onchange="selectAlibi()">
+              <option value="">Choisir un alibi...</option>
+            </select>
+          </div>
+          <div class="players-input">
+            <label for="player1-name">Joueur 1:</label>
+            <input type="text" id="player1-name" placeholder="Nom du joueur 1">
+            <label for="player2-name">Joueur 2:</label>
+            <input type="text" id="player2-name" placeholder="Nom du joueur 2">
+          </div>
+          <div class="crime-actions">
+            <button class="control-btn primary large" onclick="startAlibiPhase()">
+              Démarrer la phase Alibi
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- État du jeu -->
-      <div class="game-status-panel">
+      <div class="game-status-panel" id="game-status-panel">
         <h3>État du Jeu</h3>
         <div class="status-grid">
           <div class="status-item">
@@ -159,8 +192,20 @@
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
 
-    // Questions prédéfinies
-    const presetQuestions = [
+    // Charger la configuration de jeu depuis localStorage
+    let gameConfig = null;
+    try {
+      const savedConfig = localStorage.getItem('gameConfig');
+      if (savedConfig) {
+        gameConfig = JSON.parse(savedConfig);
+        console.log('Configuration de jeu chargée:', gameConfig);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration:', error);
+    }
+
+    // Questions prédéfinies (fallback si pas de config)
+    let presetQuestions = [
       "Où étiez-vous le 15 mars entre 14h et 16h ?",
       "Qui était avec vous ce jour-là ?",
       "Qu'avez-vous fait exactement ?",
@@ -173,7 +218,18 @@
       "À quelle heure êtes-vous rentré chez vous ?"
     ];
 
+    // Si on a une config de jeu, utiliser les questions de l'alibi
+    if (gameConfig && gameConfig.alibi && gameConfig.alibi.questions) {
+      presetQuestions = gameConfig.alibi.questions;
+    }
+
     let currentPresetIndex = 0;
+
+    // Variables pour la sélection de crime
+    let crimesData = null;
+    let selectedCrime = null;
+    let selectedAlibi = null;
+    let alibiQuestionsLoaded = false; // Flag pour savoir si les questions d'alibi sont chargées
 
     // État local
     let gameState = {
@@ -203,18 +259,132 @@
     // Initialisation
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🕵️ Page Enquêteur initialisée');
+      loadCrimesData();
       initializePresetQuestions();
       connectWebSocket();
     });
 
+    // Charger les données de crimes depuis presets.json
+    async function loadCrimesData() {
+      try {
+        const response = await fetch('/presets.json');
+        const data = await response.json();
+        crimesData = data.crimes;
+        
+        // Peupler le sélecteur de crimes
+        const crimeSelect = document.getElementById('crime-select');
+        crimesData.forEach(crime => {
+          const option = document.createElement('option');
+          option.value = crime.id;
+          option.textContent = crime.title;
+          crimeSelect.appendChild(option);
+        });
+        
+        console.log('🔍 Crimes chargés:', crimesData.length);
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des crimes:', error);
+        addLogEntry('Erreur lors du chargement des crimes', 'error');
+      }
+    }
+
+    // Sélectionner un crime
+    function selectCrime() {
+      const crimeSelect = document.getElementById('crime-select');
+      const crimeId = crimeSelect.value;
+      
+      if (crimeId) {
+        selectedCrime = crimesData.find(crime => crime.id === crimeId);
+        
+        // Afficher la description
+        document.getElementById('crime-description').textContent = selectedCrime.description;
+        
+        // Peupler le sélecteur d'alibis
+        const alibiSelect = document.getElementById('alibi-select');
+        alibiSelect.innerHTML = '<option value="">Choisir un alibi...</option>';
+        
+        selectedCrime.alibis.forEach((alibi, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `Alibi ${index + 1}`;
+          alibiSelect.appendChild(option);
+        });
+        
+        addLogEntry(`Crime sélectionné: ${selectedCrime.title}`, 'info');
+      } else {
+        selectedCrime = null;
+        document.getElementById('crime-description').textContent = 'Sélectionnez un crime pour voir la description';
+        document.getElementById('alibi-select').innerHTML = '<option value="">Choisir un alibi...</option>';
+      }
+    }
+
+    // Sélectionner un alibi
+    function selectAlibi() {
+      const alibiSelect = document.getElementById('alibi-select');
+      const alibiIndex = alibiSelect.value;
+      
+      if (alibiIndex !== '' && selectedCrime) {
+        selectedAlibi = selectedCrime.alibis[parseInt(alibiIndex)];
+        addLogEntry(`Alibi sélectionné: Alibi ${parseInt(alibiIndex) + 1}`, 'info');
+      } else {
+        selectedAlibi = null;
+      }
+    }
+
+    // Démarrer la phase alibi
+    function startAlibiPhase() {
+      if (!selectedCrime || !selectedAlibi) {
+        alert('Veuillez sélectionner un crime et un alibi');
+        return;
+      }
+      
+      const player1Name = document.getElementById('player1-name').value.trim();
+      const player2Name = document.getElementById('player2-name').value.trim();
+      
+      if (!player1Name || !player2Name) {
+        alert('Veuillez entrer les noms des deux joueurs');
+        return;
+      }
+      
+      // Préparer l'alibi avec les noms des joueurs
+      const alibiText = selectedAlibi.text
+        .replace(/\[Joueur 1\]/g, player1Name)
+        .replace(/\[Joueur 2\]/g, player2Name);
+      
+      // Envoyer l'alibi aux accusés
+      if (sendWebSocketMessage({
+        type: 'startAlibiPhase',
+        alibiText: alibiText,
+        questions: selectedAlibi.questions,
+        player1: player1Name,
+        player2: player2Name,
+        crime: selectedCrime.title
+      })) {
+        addLogEntry(`Phase alibi démarrée pour ${player1Name} et ${player2Name}`, 'success');
+        
+        // Masquer le panneau de sélection de crime
+        document.getElementById('crime-selection-panel').style.display = 'none';
+        
+        // Afficher un message d'attente
+        addLogEntry('Les accusés lisent leur alibi (60 secondes)...', 'info');
+        addLogEntry('L\'interrogatoire commencera automatiquement après', 'info');
+      }
+    }
+
     // Initialiser les questions prédéfinies
     function initializePresetQuestions() {
-      presetQuestions.forEach((question, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${index + 1}. ${question.substring(0, 50)}...`;
-        elements.presetQuestions.appendChild(option);
-      });
+      // Vider d'abord le sélecteur
+      elements.presetQuestions.innerHTML = '<option value="">Choisir une question...</option>';
+      
+      // Utiliser les questions actuelles (soit par défaut, soit d'alibi)
+      if (presetQuestions && presetQuestions.length > 0) {
+        presetQuestions.forEach((question, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${index + 1}. ${question.substring(0, 50)}...`;
+          elements.presetQuestions.appendChild(option);
+        });
+        console.log(`📋 ${presetQuestions.length} questions initialisées`);
+      }
     }
 
     // Connexion WebSocket
@@ -330,6 +500,10 @@
           break;
         case 'gameEnd':
           addLogEntry('Jeu terminé', 'info');
+          break;
+        case 'alibiQuestionsReady':
+          // Les accusés ont fini de lire l'alibi, charger les questions
+          loadAlibiQuestions(message.questions);
           break;
         default:
           console.log('⚠️ Type de message non géré:', message.type);
@@ -449,17 +623,32 @@
 
     function selectPresetQuestion() {
       const index = elements.presetQuestions.value;
-      if (index !== '') {
+      if (index !== '' && presetQuestions && presetQuestions[index]) {
         elements.questionInput.value = presetQuestions[index];
         currentPresetIndex = parseInt(index);
+        console.log(`🎯 Question sélectionnée (${currentPresetIndex + 1}/${presetQuestions.length}):`, presetQuestions[index]);
+        addLogEntry(`Question sélectionnée: ${presetQuestions[index]}`, 'info');
       }
     }
 
     function nextPresetQuestion() {
-      currentPresetIndex = (currentPresetIndex + 1) % presetQuestions.length;
-      elements.questionInput.value = presetQuestions[currentPresetIndex];
-      elements.presetQuestions.value = currentPresetIndex;
-      updateQuestion();
+      if (!alibiQuestionsLoaded) {
+        addLogEntry('Les questions d\'alibi ne sont pas encore chargées', 'warning');
+        return;
+      }
+      
+      if (presetQuestions && presetQuestions.length > 0) {
+        currentPresetIndex = (currentPresetIndex + 1) % presetQuestions.length;
+        elements.questionInput.value = presetQuestions[currentPresetIndex];
+        elements.presetQuestions.value = currentPresetIndex;
+        
+        console.log(`🔄 Question suivante (${currentPresetIndex + 1}/${presetQuestions.length}):`, presetQuestions[currentPresetIndex]);
+        
+        updateQuestion();
+        addLogEntry(`Question suivante (${currentPresetIndex + 1}/${presetQuestions.length}): ${presetQuestions[currentPresetIndex]}`, 'info');
+      } else {
+        addLogEntry('Aucune question disponible', 'warning');
+      }
     }
 
     function toggleActiveTeam() {
@@ -559,6 +748,57 @@
 
     function clearLog() {
       elements.actionLog.innerHTML = '<div class="log-entry">Journal effacé</div>';
+    }
+
+    // Charger les questions d'alibi et commencer l'interrogatoire
+    function loadAlibiQuestions(questions) {
+      console.log('📋 Chargement des questions d\'alibi:', questions);
+      
+      if (!questions || questions.length === 0) {
+        addLogEntry('Aucune question d\'alibi reçue', 'error');
+        return;
+      }
+      
+      // IMPORTANT: Remplacer complètement les questions prédéfinies par celles de l'alibi
+      presetQuestions = [...questions]; // Copie pour éviter les références
+      currentPresetIndex = 0;
+      alibiQuestionsLoaded = true;
+      
+      console.log('📋 Questions chargées dans presetQuestions:', presetQuestions);
+      
+      // Vider et remettre à jour le sélecteur de questions
+      const presetSelect = elements.presetQuestions;
+      presetSelect.innerHTML = '<option value="">Choisir une question...</option>';
+      questions.forEach((question, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${index + 1}. ${question.substring(0, 50)}...`;
+        presetSelect.appendChild(option);
+      });
+      
+      addLogEntry(`${questions.length} questions d'alibi chargées dans le sélecteur`, 'success');
+      
+      // Poser automatiquement la première question
+      if (questions && questions.length > 0) {
+        elements.questionInput.value = questions[0];
+        elements.presetQuestions.value = 0;
+        
+        // Envoyer immédiatement la première question
+        if (sendWebSocketMessage({
+          type: 'changeQuestion',
+          question: questions[0]
+        })) {
+          addLogEntry('Phase interrogatoire démarrée avec les questions d\'alibi', 'success');
+          addLogEntry(`Première question posée: ${questions[0]}`, 'info');
+        }
+      }
+      
+      // Commencer le jeu automatiquement
+      if (sendWebSocketMessage({
+        type: 'startGame'
+      })) {
+        addLogEntry('Jeu démarré automatiquement', 'success');
+      }
     }
 
     // Raccourcis clavier

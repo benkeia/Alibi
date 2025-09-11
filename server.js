@@ -317,6 +317,29 @@ function handleRoomMessage(roomCode, message, ws) {
                 }
             });
             break;
+            
+        case 'startAlibiPhase':
+            // Diffuser la phase alibi aux accusés
+            broadcastToAccusedInRoom(roomCode, {
+                type: 'startAlibiPhase',
+                data: {
+                    alibiText: message.alibiText,
+                    questions: message.questions,
+                    player1: message.player1,
+                    player2: message.player2,
+                    crime: message.crime
+                }
+            });
+            break;
+            
+        case 'alibiQuestionsReady':
+            // Transmettre aux enquêteurs que les questions d'alibi sont prêtes
+            console.log('📋 Questions d\'alibi prêtes:', message.questions);
+            broadcastToInvestigatorsInRoom(roomCode, {
+                type: 'alibiQuestionsReady',
+                questions: message.questions
+            });
+            break;
     }
 }
 
@@ -392,6 +415,29 @@ function handleGlobalMessage(message, ws) {
                 });
             }
             break;
+            
+        case 'startAlibiPhase':
+            // Diffuser la phase alibi aux accusés en mode global
+            broadcastToAccused({
+                type: 'startAlibiPhase',
+                data: {
+                    alibiText: message.alibiText,
+                    questions: message.questions,
+                    player1: message.player1,
+                    player2: message.player2,
+                    crime: message.crime
+                }
+            });
+            break;
+            
+        case 'alibiQuestionsReady':
+            // Transmettre aux enquêteurs que les questions d'alibi sont prêtes (mode global)
+            console.log('📋 Questions d\'alibi prêtes (global):', message.questions);
+            broadcastToInvestigators({
+                type: 'alibiQuestionsReady',
+                questions: message.questions
+            });
+            break;
     }
 }
 
@@ -400,6 +446,16 @@ function handleGlobalMessage(message, ws) {
 // Page d'accueil
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Page de configuration de partie
+app.get('/setup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'setup.html'));
+});
+
+// Page de démo
+app.get('/demo', (req, res) => {
+    res.sendFile(path.join(__dirname, 'demo.html'));
 });
 
 // API pour créer une room

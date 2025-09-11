@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration de Partie • Alibi</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .setup-container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .step {
+      display: none;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+      color: #00ff41;
+      font-size: 2em;
+      margin-bottom: 30px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .step-description {
+      color: #ccc;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .option-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .option-card:hover,
+    .option-card.selected {
+      border-color: #00ff41;
+      background: rgba(0, 255, 65, 0.1);
+      transform: translateY(-5px);
+    }
+
+    .option-title {
+      color: #00ff41;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .option-description {
+      color: #ccc;
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    .input-group {
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      color: #00ff41;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus {
+      border-color: #00ff41;
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+
+    .buttons {
+      margin: 30px 0;
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      color: white;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn.primary {
+      background: linear-gradient(45deg, #00ff41, #00cc33);
+      color: black;
+    }
+
+    .btn.primary:hover {
+      box-shadow: 0 5px 15px rgba(0, 255, 65, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .crime-display {
+      background: rgba(255, 0, 0, 0.1);
+      border: 2px solid #ff6b6b;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .crime-title {
+      color: #ff6b6b;
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .alibi-display {
+      background: rgba(0, 255, 65, 0.1);
+      border: 2px solid #00ff41;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .countdown {
+      font-size: 3em;
+      color: #ff6b6b;
+      font-weight: bold;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    .waiting-screen {
+      text-align: center;
+      padding: 50px;
+    }
+
+    .waiting-title {
+      color: #00ff41;
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .loading-dots {
+      display: inline-block;
+      margin: 20px 0;
+    }
+
+    .loading-dots span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #00ff41;
+      margin: 0 5px;
+      animation: bounce 1.4s ease-in-out infinite both;
+    }
+
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="background"></div>
+
+  <div class="setup-container">
+    <!-- Étape 1: Nombre de duos -->
+    <div class="step active" id="step-teams">
+      <h2 class="step-title">Configuration de la Partie</h2>
+      <p class="step-description">
+        Combien d'équipes participent à cette partie d'interrogatoire ?
+      </p>
+      
+      <div class="option-grid">
+        <div class="option-card" data-teams="1">
+          <div class="option-title">1 Équipe</div>
+          <div class="option-description">
+            Une seule équipe de suspects.<br>
+            Vous devrez choisir un alibi spécifique.
+          </div>
+        </div>
+        <div class="option-card" data-teams="2">
+          <div class="option-title">2 Équipes</div>
+          <div class="option-description">
+            Deux équipes en compétition.<br>
+            Chacune aura son propre alibi.
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn primary" onclick="nextStep()" id="btn-teams" disabled>Continuer</button>
+      </div>
+    </div>
+
+    <!-- Étape 2: Choix du crime -->
+    <div class="step" id="step-crime">
+      <h2 class="step-title">Sélection du Crime</h2>
+      <p class="step-description">
+        Choisissez le scénario criminel pour cette partie
+      </p>
+      
+      <div class="option-grid" id="crimes-container">
+        <!-- Généré dynamiquement -->
+      </div>
+
+      <div class="buttons">
+        <button class="btn" onclick="prevStep()">Retour</button>
+        <button class="btn primary" onclick="nextStep()" id="btn-crime" disabled>Continuer</button>
+      </div>
+    </div>
+
+    <!-- Étape 3: Choix de l'alibi (pour 1 équipe) -->
+    <div class="step" id="step-alibi">
+      <h2 class="step-title">Sélection de l'Alibi</h2>
+      <p class="step-description">
+        Choisissez l'alibi que l'équipe devra défendre
+      </p>
+      
+      <div class="option-grid" id="alibis-container">
+        <!-- Généré dynamiquement -->
+      </div>
+
+      <div class="buttons">
+        <button class="btn" onclick="prevStep()">Retour</button>
+        <button class="btn primary" onclick="nextStep()" id="btn-alibi" disabled>Continuer</button>
+      </div>
+    </div>
+
+    <!-- Étape 4: Prénoms des joueurs -->
+    <div class="step" id="step-players">
+      <h2 class="step-title">Prénoms des Joueurs</h2>
+      <p class="step-description">
+        Entrez les prénoms des joueurs pour personnaliser l'alibi
+      </p>
+      
+      <div id="players-container">
+        <!-- Généré dynamiquement -->
+      </div>
+
+      <div class="buttons">
+        <button class="btn" onclick="prevStep()">Retour</button>
+        <button class="btn primary" onclick="startGame()">Lancer la Partie</button>
+      </div>
+    </div>
+
+    <!-- Étape 5: Affichage du crime et alibi -->
+    <div class="step" id="step-game">
+      <h2 class="step-title">Début de l'Interrogatoire</h2>
+      
+      <div class="crime-display">
+        <div class="crime-title" id="display-crime-title">Crime</div>
+        <div id="display-crime-description">Description du crime</div>
+      </div>
+
+      <div class="alibi-display" id="display-alibi">
+        Alibi de l'équipe
+      </div>
+
+      <div class="countdown" id="countdown">60</div>
+      <p>L'alibi disparaîtra dans <span id="countdown-text">60</span> secondes</p>
+
+      <div class="buttons">
+        <button class="btn primary" onclick="skipCountdown()" id="btn-skip">Passer le chrono</button>
+      </div>
+    </div>
+
+    <!-- Étape 6: Écran d'attente -->
+    <div class="step" id="step-waiting">
+      <div class="waiting-screen">
+        <h2 class="waiting-title">Mémorisation terminée</h2>
+        <p class="step-description">
+          L'enquêteur va maintenant prendre le contrôle de l'interrogatoire
+        </p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="buttons">
+          <button class="btn primary" onclick="goToInvestigator()">Interface Enquêteur</button>
+          <button class="btn" onclick="goToAccused()">Interface Accusé</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let gameConfig = {
+      teams: null,
+      crime: null,
+      alibi: null,
+      players: {}
+    };
+
+    let presets = {};
+    let currentStep = 0;
+    const steps = ['step-teams', 'step-crime', 'step-alibi', 'step-players', 'step-game', 'step-waiting'];
+
+    // Charger les presets depuis le JSON
+    async function loadPresets() {
+      try {
+        const response = await fetch('/presets.json');
+        presets = await response.json();
+        console.log('Presets chargés:', presets);
+      } catch (error) {
+        console.error('Erreur lors du chargement des presets:', error);
+        alert('Erreur lors du chargement des données de jeu');
+      }
+    }
+
+    // Gestion des étapes
+    function showStep(stepIndex) {
+      steps.forEach((stepId, index) => {
+        const element = document.getElementById(stepId);
+        if (index === stepIndex) {
+          element.classList.add('active');
+        } else {
+          element.classList.remove('active');
+        }
+      });
+    }
+
+    function nextStep() {
+      if (currentStep === 1 && gameConfig.teams === 2) {
+        // Si 2 équipes, on passe directement aux prénoms (pas de choix d'alibi)
+        currentStep = 3;
+      } else {
+        currentStep++;
+      }
+
+      if (currentStep === 2) {
+        generateCrimesOptions();
+      } else if (currentStep === 3 && gameConfig.teams === 1) {
+        generateAlibisOptions();
+      } else if (currentStep === 3 || currentStep === 4) {
+        generatePlayersInputs();
+      }
+
+      showStep(currentStep);
+    }
+
+    function prevStep() {
+      if (currentStep === 3 && gameConfig.teams === 2) {
+        // Si 2 équipes, on revient directement au choix du crime
+        currentStep = 1;
+      } else {
+        currentStep--;
+      }
+      showStep(currentStep);
+    }
+
+    // Étape 1: Sélection des équipes
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPresets();
+
+      const teamOptions = document.querySelectorAll('[data-teams]');
+      teamOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          teamOptions.forEach(opt => opt.classList.remove('selected'));
+          this.classList.add('selected');
+          gameConfig.teams = parseInt(this.dataset.teams);
+          document.getElementById('btn-teams').disabled = false;
+        });
+      });
+    });
+
+    // Étape 2: Génération des options de crimes
+    function generateCrimesOptions() {
+      const container = document.getElementById('crimes-container');
+      container.innerHTML = '';
+
+      presets.crimes.forEach(crime => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.dataset.crimeId = crime.id;
+        card.innerHTML = `
+          <div class="option-title">${crime.title}</div>
+          <div class="option-description">${crime.description}</div>
+        `;
+
+        card.addEventListener('click', function() {
+          document.querySelectorAll('#crimes-container .option-card').forEach(opt => 
+            opt.classList.remove('selected'));
+          this.classList.add('selected');
+          gameConfig.crime = crime;
+          document.getElementById('btn-crime').disabled = false;
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    // Étape 3: Génération des options d'alibis
+    function generateAlibisOptions() {
+      const container = document.getElementById('alibis-container');
+      container.innerHTML = '';
+
+      if (!gameConfig.crime) return;
+
+      gameConfig.crime.alibis.forEach(alibi => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.dataset.alibiId = alibi.id;
+        card.innerHTML = `
+          <div class="option-title">Alibi ${alibi.id.replace('alibi', '')}</div>
+          <div class="option-description">${alibi.text.substring(0, 150)}...</div>
+        `;
+
+        card.addEventListener('click', function() {
+          document.querySelectorAll('#alibis-container .option-card').forEach(opt => 
+            opt.classList.remove('selected'));
+          this.classList.add('selected');
+          gameConfig.alibi = alibi;
+          document.getElementById('btn-alibi').disabled = false;
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    // Étape 4: Génération des inputs pour les prénoms
+    function generatePlayersInputs() {
+      const container = document.getElementById('players-container');
+      container.innerHTML = '';
+
+      if (gameConfig.teams === 1) {
+        // Une équipe
+        container.innerHTML = `
+          <div class="input-group">
+            <label for="player1">Prénom du Joueur 1:</label>
+            <input type="text" id="player1" placeholder="Entrez le prénom">
+          </div>
+          <div class="input-group">
+            <label for="player2">Prénom du Joueur 2:</label>
+            <input type="text" id="player2" placeholder="Entrez le prénom">
+          </div>
+        `;
+      } else {
+        // Deux équipes
+        container.innerHTML = `
+          <h3 style="color: #00ff41;">Équipe A</h3>
+          <div class="input-group">
+            <label for="player1a">Prénom du Joueur 1:</label>
+            <input type="text" id="player1a" placeholder="Entrez le prénom">
+          </div>
+          <div class="input-group">
+            <label for="player2a">Prénom du Joueur 2:</label>
+            <input type="text" id="player2a" placeholder="Entrez le prénom">
+          </div>
+          
+          <h3 style="color: #ff6b6b;">Équipe B</h3>
+          <div class="input-group">
+            <label for="player1b">Prénom du Joueur 1:</label>
+            <input type="text" id="player1b" placeholder="Entrez le prénom">
+          </div>
+          <div class="input-group">
+            <label for="player2b">Prénom du Joueur 2:</label>
+            <input type="text" id="player2b" placeholder="Entrez le prénom">
+          </div>
+        `;
+      }
+    }
+
+    // Lancement de la partie
+    function startGame() {
+      // Récupérer les prénoms
+      if (gameConfig.teams === 1) {
+        gameConfig.players = {
+          player1: document.getElementById('player1').value.trim(),
+          player2: document.getElementById('player2').value.trim()
+        };
+      } else {
+        gameConfig.players = {
+          team1: {
+            player1: document.getElementById('player1a').value.trim(),
+            player2: document.getElementById('player2a').value.trim()
+          },
+          team2: {
+            player1: document.getElementById('player1b').value.trim(),
+            player2: document.getElementById('player2b').value.trim()
+          }
+        };
+      }
+
+      // Vérifier que tous les prénoms sont remplis
+      if (gameConfig.teams === 1) {
+        if (!gameConfig.players.player1 || !gameConfig.players.player2) {
+          alert('Veuillez remplir tous les prénoms');
+          return;
+        }
+      } else {
+        if (!gameConfig.players.team1.player1 || !gameConfig.players.team1.player2 ||
+            !gameConfig.players.team2.player1 || !gameConfig.players.team2.player2) {
+          alert('Veuillez remplir tous les prénoms');
+          return;
+        }
+      }
+
+      // Afficher le crime et l'alibi
+      displayGameInfo();
+      currentStep = 4;
+      showStep(currentStep);
+      startCountdown();
+    }
+
+    // Affichage des informations de jeu
+    function displayGameInfo() {
+      document.getElementById('display-crime-title').textContent = gameConfig.crime.title;
+      document.getElementById('display-crime-description').textContent = gameConfig.crime.description;
+
+      if (gameConfig.teams === 1) {
+        // Remplacer les placeholders dans l'alibi
+        let alibiText = gameConfig.alibi.text;
+        alibiText = alibiText.replace(/\[Joueur 1\]/g, gameConfig.players.player1);
+        alibiText = alibiText.replace(/\[Joueur 2\]/g, gameConfig.players.player2);
+        document.getElementById('display-alibi').textContent = alibiText;
+      } else {
+        document.getElementById('display-alibi').innerHTML = `
+          <h4 style="color: #00ff41;">Les alibis seront attribués automatiquement aux équipes</h4>
+          <p>Chaque équipe recevra un alibi différent avec les prénoms personnalisés.</p>
+        `;
+      }
+    }
+
+    // Chronomètre
+    function startCountdown() {
+      let timeLeft = 60;
+      const countdownElement = document.getElementById('countdown');
+      const countdownText = document.getElementById('countdown-text');
+
+      const timer = setInterval(() => {
+        timeLeft--;
+        countdownElement.textContent = timeLeft;
+        countdownText.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          endCountdown();
+        }
+      }, 1000);
+
+      // Stocker l'ID du timer pour pouvoir l'arrêter
+      window.currentTimer = timer;
+    }
+
+    function skipCountdown() {
+      if (window.currentTimer) {
+        clearInterval(window.currentTimer);
+      }
+      endCountdown();
+    }
+
+    function endCountdown() {
+      currentStep = 5;
+      showStep(currentStep);
+    }
+
+    // Navigation vers les interfaces
+    function goToInvestigator() {
+      // Sauvegarder la config dans le localStorage
+      localStorage.setItem('gameConfig', JSON.stringify(gameConfig));
+      
+      // Rediriger vers l'interface investigateur
+      window.location.href = '/investigator';
+    }
+
+    function goToAccused() {
+      // Sauvegarder la config dans le localStorage
+      localStorage.setItem('gameConfig', JSON.stringify(gameConfig));
+      
+      // Rediriger vers l'interface accusé
+      window.location.href = '/accused';
+    }
+  </script>
+</body>
+</html>

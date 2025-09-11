@@ -50,15 +50,13 @@
     }
     
     .role-card.multi-mode {
-      grid-column: span 2;
       background: rgba(3, 255, 152, 0.08);
       border: 2px solid var(--color-accent);
     }
     
     .multi-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      display: flex;
+      justify-content: center;
       margin-top: 1rem;
     }
     
@@ -68,12 +66,9 @@
     }
     
     @media (max-width: 768px) {
-      .role-card.multi-mode {
-        grid-column: span 1;
-      }
-      
       .multi-options {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        gap: 1rem;
       }
     }
   </style>
@@ -85,53 +80,36 @@
     <h1 class="title">
       Alibi<span class="blinker">_</span>
     </h1>
-    <p class="subtitle">Jeu d'interrogatoire en réseau</p>
+    <p class="subtitle">Système de rooms avec crimes et alibis personnalisés</p>
   </div>
 
   <section class="role-selection" style="margin-bottom: 250px;">
     <div class="roles-grid">
       <!-- Nouveau système de Rooms -->
       <div class="role-card multi-mode">
-        <h2 class="role-title">🏠 Système de Rooms</h2>
+        <h2 class="role-title">🏠 Créer une Room</h2>
         <p class="role-desc">
-          <strong>Créez votre propre room</strong> avec un code unique<br>
-          Partagez le code pour que vos amis rejoignent votre partie
+          <strong>Démarrez une nouvelle partie</strong><br>
+          • Choisissez un crime et un alibi<br>
+          • Obtenez un code de room unique<br>
+          • Jouez le rôle de l'enquêteur
         </p>
         <div class="multi-options">
           <button class="role-btn small" id="create-room-btn">Créer une Room</button>
-          <button class="role-btn small" onclick="showJoinModal()">Rejoindre une Room</button>
         </div>
       </div>
 
-      <!-- Mode Classique -->
-      <div class="role-card">
-        <h2 class="role-title">Accusé (Mode Simple)</h2>
-        <p class="role-desc">
-          Mode classique : Un accusé face aux enquêteurs.
-        </p>
-        <a href="/accused" class="role-btn">Rejoindre comme Accusé</a>
-      </div>
-
-      <div class="role-card">
-        <h2 class="role-title">Enquêteur (Mode Simple)</h2>
-        <p class="role-desc">
-          Mode classique : Contrôlez l'interrogatoire.
-        </p>
-        <a href="/investigator" class="role-btn">Rejoindre comme Enquêteur</a>
-      </div>
-
-      <!-- Mode Multi-Joueurs 2v2 -->
+      <!-- Rejoindre une Room -->
       <div class="role-card multi-mode">
-        <h2 class="role-title">🎮 Mode 2v2 (Legacy)</h2>
+        <h2 class="role-title">🎯 Rejoindre une Room</h2>
         <p class="role-desc">
-          <strong>4 joueurs :</strong> 2 Enquêteurs + 2 Accusés<br>
-          Chaque enquêteur interroge son accusé, avec coordination entre équipes.
+          <strong>Participez à une partie</strong><br>
+          • Entrez le code de room<br>
+          • Lisez votre alibi pendant 60 secondes<br>
+          • Jouez le rôle de l'accusé
         </p>
         <div class="multi-options">
-          <a href="/investigator1" class="role-btn small">Enquêteur 1</a>
-          <a href="/investigator2" class="role-btn small">Enquêteur 2</a>
-          <a href="/accused1" class="role-btn small">Accusé 1</a>
-          <a href="/accused2" class="role-btn small">Accusé 2</a>
+          <button class="role-btn small" onclick="showJoinModal()">Rejoindre une Room</button>
         </div>
       </div>
     </div>
@@ -163,7 +141,7 @@
 
   <footer class="footer">
     <p class="footer-text">
-      Utilisez Node.js pour la communication WebSocket entre les appareils
+      Système de rooms avec sélection de crimes et alibis personnalisés
     </p>
   </footer>
 
