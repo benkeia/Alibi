@@ -184,6 +184,35 @@ const questions = [
 - **Réseau** : Wi-Fi local, pas besoin d'internet
 - **Responsive** : Interface adaptative pour tous les écrans
 
+## 🌍 Déploiement
+
+### ✅ Render.com (Recommandé)
+Ce jeu fonctionne parfaitement sur [Render.com](https://render.com) car il supporte les WebSockets et les processus Node.js persistants. Le fichier `render.yaml` est déjà configuré.
+
+**Avantages :**
+- Support complet des WebSockets
+- Processus Node.js persistant
+- Configuration automatique via `render.yaml`
+- Plan gratuit disponible
+
+### ⚠️ Vercel (Limité)
+**Important :** Vercel a des limitations importantes pour ce projet :
+
+1. **WebSockets non supportés** : Vercel ne supporte pas les connexions WebSocket persistantes
+2. **Serverless uniquement** : Les fonctions Vercel sont éphémères et ne peuvent pas maintenir d'état entre les requêtes
+3. **Fonctionnalités limitées** : Sur Vercel, seuls les fichiers statiques (HTML, CSS, JS) seront correctement servis
+
+**Configuration Vercel :**
+Le fichier `vercel.json` est fourni pour servir correctement les fichiers statiques, mais les fonctionnalités WebSocket ne fonctionneront pas. Les pages s'afficheront, mais la communication en temps réel entre joueurs ne sera pas disponible.
+
+**Recommandation :** Utilisez Render.com ou un autre service supportant les WebSockets pour une expérience complète du jeu.
+
+### Autres Options de Déploiement
+- **Heroku** : Support complet des WebSockets (plan payant requis)
+- **Railway** : Support complet des WebSockets
+- **Fly.io** : Support complet des WebSockets
+- **DigitalOcean App Platform** : Support complet des WebSockets
+
 ---
 
 **Bon interrogatoire ! 🕵️‍♂️🎭**
