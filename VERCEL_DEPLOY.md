@@ -20,17 +20,26 @@ Alibi/
 
 **Frontend (Vercel):**
 1. Connectez votre repo GitHub à Vercel
-2. Vercel détectera automatiquement le monorepo
-3. Sélectionnez le projet à déployer: `apps/web`
-4. Déployez!
+2. Lors de la configuration du projet:
+   - **Framework Preset**: Other
+   - **Root Directory**: `apps/web`
+   - **Build Command**: (laisser vide)
+   - **Output Directory**: `.` (ou laisser vide)
+3. Vercel détectera automatiquement les fichiers statiques
+4. Ajoutez une variable d'environnement (optionnelle):
+   - Clé: `WS_URL`
+   - Valeur: `wss://votre-serveur-websocket.railway.app` (après déploiement du backend)
+5. Déployez!
 
 **Backend (Railway/Render):**
 1. Créez un nouveau service sur Railway ou Render
 2. Configurez le répertoire racine: `apps/server`
 3. Commande de build: `npm install`
 4. Commande de démarrage: `npm start`
-5. Configurez les variables d'environnement:
-   - `PORT` (optionnel, défaut: 3000)
+5. Notez l'URL générée (ex: `https://alibi-server.railway.app`)
+6. Retournez sur Vercel et mettez à jour `WS_URL` avec cette URL
+
+**Important**: Déployez d'abord le backend, puis mettez à jour `apps/web/config.js` avec l'URL du backend avant de déployer le frontend.
 
 ### Option 2: Configuration Vercel CLI
 
