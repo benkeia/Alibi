@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Démo • Alibi</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .demo-title {
+      font-family: var(--font-title);
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-shadow: var(--glow);
+      margin-bottom: 2rem;
+    }
+    
+    .demo-description {
+      font-family: var(--font-body);
+      font-size: 1.2rem;
+      color: var(--color-primary);
+      text-shadow: var(--glow);
+      margin-bottom: 3rem;
+      max-width: 800px;
+      line-height: 1.6;
+      opacity: 0.8;
+    }
+    
+    .demo-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    
+    .demo-btn {
+      background: rgba(3, 255, 152, 0.1);
+      border: 2px solid rgba(3, 255, 152, 0.5);
+      color: var(--color-primary);
+      font-family: var(--font-body);
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      text-shadow: var(--glow);
+      border-radius: 5px;
+      min-width: 250px;
+    }
+    
+    .demo-btn:hover {
+      border-color: var(--color-primary);
+      background: rgba(3, 255, 152, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(3, 255, 152, 0.3);
+    }
+    
+    .demo-btn.primary {
+      background: rgba(3, 255, 152, 0.2);
+      border-color: var(--color-primary);
+      font-weight: 700;
+    }
+    
+    .demo-btn.primary:hover {
+      background: rgba(3, 255, 152, 0.3);
+      box-shadow: 0 8px 25px rgba(3, 255, 152, 0.4);
+    }
+    
+    .config-preview {
+      background: rgba(3, 255, 152, 0.05);
+      border: 1px solid rgba(3, 255, 152, 0.3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      max-width: 600px;
+      text-align: left;
+    }
+    
+    .config-preview h3 {
+      font-family: var(--font-title);
+      font-size: 1.3rem;
+      color: var(--color-primary);
+      text-shadow: var(--glow);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .config-preview p {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--color-primary);
+      margin: 0.5rem 0;
+      opacity: 0.8;
+    }
+    
+    .config-preview strong {
+      color: var(--color-primary);
+      font-weight: 600;
+      text-shadow: var(--glow);
+    }
+    
+    .back-link {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      background: none;
+      border: 1px solid rgba(3, 255, 152, 0.5);
+      color: var(--color-primary);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      padding: 0.8rem 1.5rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      text-shadow: var(--glow);
+      opacity: 0.6;
+    }
+    
+    .back-link:hover {
+      border-color: var(--color-primary);
+      background: rgba(3, 255, 152, 0.1);
+      opacity: 1;
+    }
+  </style>
+  <script src="/config.js"></script>
+</head>
+<body>
+  <div class="background"></div>
+  
+  <a href="/" class="back-link">&lt; Retour au menu</a>
+  
+  <div class="demo-container">
+    <h1 class="demo-title">Démo Configuration</h1>
+    
+    <div class="demo-description">
+      Cette démo charge automatiquement une configuration de jeu prédéfinie pour tester le système complet avec les preset JSON.
+    </div>
+    
+    <div class="config-preview">
+      <h3>Configuration de démo</h3>
+      <p><strong>Équipes:</strong> 1 équipe (mode coopératif)</p>
+      <p><strong>Crime:</strong> Vol de bijoux dans une bijouterie</p>
+      <p><strong>Alibi:</strong> J'étais chez ma grand-mère pour l'aider à faire ses courses</p>
+      <p><strong>Joueurs:</strong> Alice, Bob, Charlie</p>
+      <p><strong>Questions:</strong> 10 questions personnalisées selon l'alibi</p>
+    </div>
+    
+    <div class="demo-actions">
+      <button class="demo-btn primary" onclick="loadDemoConfig()">Charger la démo</button>
+      <a href="/setup" class="demo-btn">Configuration personnalisée</a>
+      <a href="/" class="demo-btn">Retour au menu</a>
+    </div>
+  </div>
+
+  <script>
+    function loadDemoConfig() {
+      // Configuration de démo prédéfinie
+      const demoConfig = {
+        teamCount: 1,
+        crime: {
+          title: "Vol de bijoux dans une bijouterie",
+          description: "Un vol audacieux a eu lieu hier soir dans la bijouterie Diamant d'Or. Le ou les voleurs ont dérobé plusieurs bijoux de grande valeur."
+        },
+        alibi: {
+          title: "J'étais chez ma grand-mère pour l'aider à faire ses courses",
+          text: "Hier soir, j'étais chez ma grand-mère Alice pour l'aider à faire ses courses. Nous avons pris le bus ensemble vers 18h30 pour aller au supermarché du centre-ville. Elle voulait acheter des ingrédients frais pour préparer un repas spécial pour Bob qui venait dîner. Nous avons passé environ une heure et demie dans le magasin, puis nous sommes rentrées chez elle vers 20h15. J'ai aidé à ranger les courses et nous avons préparé le repas ensemble avant que Charlie nous rejoigne vers 21h.",
+          questions: [
+            "Où étiez-vous hier soir entre 18h et 21h ?",
+            "Qui était avec vous chez votre grand-mère ?",
+            "Quel moyen de transport avez-vous utilisé pour aller au supermarché ?",
+            "À quelle heure êtes-vous partis faire les courses ?",
+            "Qu'avez-vous acheté au supermarché exactement ?",
+            "Pourquoi votre grand-mère Alice voulait-elle faire ces courses ?",
+            "À quelle heure êtes-vous rentrés chez votre grand-mère ?",
+            "Qu'avez-vous fait après avoir rangé les courses ?",
+            "Qui devait venir dîner chez votre grand-mère ?",
+            "À quelle heure Charlie vous a-t-il rejoint ?"
+          ]
+        },
+        players: ["Alice", "Bob", "Charlie"]
+      };
+      
+      // Sauvegarder la configuration dans localStorage
+      localStorage.setItem('gameConfig', JSON.stringify(demoConfig));
+      
+      // Générer un code de room aléatoire
+      const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+      
+      // Notification de succès
+      alert('Configuration de démo chargée ! Vous allez être redirigé vers la salle ' + roomCode);
+      
+      // Rediriger vers la room
+      window.location.href = `/room/${roomCode}`;
+    }
+  </script>
+</body>
+</html>

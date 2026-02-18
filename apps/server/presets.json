@@ -1,0 +1,62 @@
+{
+  "crimes": [
+    {
+      "id": "pc_volé",
+      "title": "Un PC flambant neuf de la salle réseau a été volé.",
+      "description": "Les suspects seraient rentrés par effraction dans la journée, auraient arpentés les couloirs de l’IUT avec la tour dans un sac à dos et l’écran dans l’autre. Sur les caméras deux duos d’élèves sont mis en cause.",
+      "alibis": [
+        {
+          "id": "alibi1",
+          "text": "Ce matin, [Joueur 1] et [Joueur 2] étaient tous les deux en cours. Selon votre professeur, vous n’étiez pas très attentif. A la pause, on vous aurait aperçu au distributeur, la machine aurait avalé votre pièce et vous avez dû contacter Josselin, technicien de l’IUT pour de l’aide. Au retour de cours, votre professeur ne vous a pas apperçu, vous auriez passé plus de dix minutes tout les deux seuls dans les toilettes. En fin de matinée, vous auriez été vus dans la cafétéria profitant de votre déjeuner lorsqu’une dispute à éclaté.",
+          "questions": [
+            "Quel est le nom de votre professeur ?",
+            "Qu’avez vous pris au distributeur ?",
+            "Combien la machine vous à avalé ?",
+            "Que faisiez vous pendant dix minutes seuls aux toilettes ?",
+            "Qu’avez vous mangé à midi ?"
+          ]
+        },
+        {
+          "id": "alibi2",
+          "text": "Ce matin, [Joueur 1] et [Joueur 2], n’étais pas en cours ce matin, [Joueur 1] à décidé de venir plus tôt pour travailler pour le BDE tandis que [Joueur 2] avait des problèmes pour se connecter à eduroam. [Joueur 1] à commencé par chercher une trend à refaire avec la mascotte et lorsqu’il à trouvé [Joueur 2] à enfin réussi à faire marcher le réseau. Vous avez ensuite décidé de faire la trend tiktok. A la pause on vous aurait vu à l’extérieur afin de prendre l’air. Après la pause vous avez monté puis posté le tiktok. Le midi, vous êtes venu vendre des places pour le BDE dans la cafétéria.",
+          "questions": [
+            "A quelle heure êtes-vous arrivé à l’IUT pour travailler ?",
+            "Quelle trend avez vous décidé de refaire ?",
+            "Au bout de combien de temps [Joueur 2] à pu se connecter à internet ?",
+            "Quel logiciel avez vous utilisé pour le montage du tiktok ?",
+            "Combien de places avez vous vendues ce jour là ?"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mascotte_volée",
+      "title": "Quelqu’un a volé la mascotte du BDE dans la journée.",
+      "description": "Deux duos d’étudiants sont suspectés.",
+      "alibis": [
+        {
+          "id": "alibi1",
+          "text": "Ce matin, [Joueur 1] et [Joueur 2] étaient en salle informatique pour avancer sur leur projet de développement web. Vous étiez censés travailler sur une maquette, mais selon votre professeur, vous passiez plus de temps à discuter qu’à coder. À la pause, vous êtes descendus dans le coin fumeur. Vous avez commencé à discuter avec les 3èmes années qui vous ont parlé des pires professeurs de l’IUT. De retour en salle, vous avez passé près d’une demi-heure à essayer de comprendre pourquoi le style de votre site ne marchait pas. Vers midi, vous avez été vus dehors, assis près du terrain de volley, en train de manger vos gamelles, tout en regardant une vidéo sur votre téléphone.",
+          "questions": [
+            "Sur quoi portait votre projet web ?",
+            "De quoi avez-vous parlé pendant le cours lors de cette matinée ?",
+            "De quel professeur avez-vous parlé à la pause ?",
+            "Qu’avez vous mangé ce jours là ?",
+            "Sur quel téléphone ont été jouées les vidéos"
+          ]
+        },
+        {
+          "id": "alibi2",
+          "text": "Ce matin, [Joueur 1] et [Joueur 2] étaient en cours, où vous travailliez sur la mise en page d’une affiche pour le BDE. Pendant le cours, [Joueur 1] a prêté une clé USB à [Joueur 2] pour récupérer des fichiers nécessaires au projet, et vous avez échangé quelques idées pour améliorer la composition et les couleurs. Comme d’habitude, quelqu’un est arrivé en retard, ce qui a légèrement perturbé le début du cours et a fait rire toute la classe. À la pause, vous êtes descendus à la cafétéria pour prendre un café, et là… de nulle part, la mascotte du BDE est apparue, et a commencé à crier votre cri de guerre, ce qui a surpris plusieurs étudiants et vous a fait rire. Après ça, vous êtes retournés en cours pour continuer à travailler sur l’affiche et finaliser votre projet, tout en notant quelques idées pour que les gens participent aux évènements du BDE.",
+          "questions": [
+            "De quel évenement avez-vous fait l’affiche ?",
+            "Combien de Go avait la clé USB ?",
+            "Qui est arrivé en retard ce jour là ?",
+            "Comment s’appelle la mascotte du BDE la bête ?",
+            "Pourriez vous me chanter le cris de guerre du BDE ?"
+          ]
+        }
+      ]
+    }
+  ]
+}

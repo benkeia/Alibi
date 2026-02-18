@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquêteur 2 • Alibi 2v2</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/investigator.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <style>
+    .player-id {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 152, 0, 0.1);
+      border: 1px solid #FF9800;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      color: #FF9800;
+      text-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+      z-index: 15;
+    }
+    
+    .peer-activity {
+      position: fixed;
+      top: 80px;
+      left: 20px;
+      right: 20px;
+      background: rgba(3, 255, 152, 0.1);
+      border: 1px solid var(--color-primary);
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--color-primary);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 14;
+    }
+    
+    .peer-activity.show {
+      opacity: 1;
+    }
+    
+    .coordination-panel {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 300px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid #FF9800;
+      border-radius: 8px;
+      padding: 1rem;
+      z-index: 10;
+    }
+    
+    .coordination-title {
+      color: #FF9800;
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .peer-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+    
+    .peer-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      box-shadow: 0 0 8px rgba(3, 255, 152, 0.6);
+    }
+    
+    .peer-indicator.offline {
+      background: #666;
+      box-shadow: none;
+    }
+    
+    .team-control {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .team-switch-info {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+  <script src="/config.js"></script>
+</head>
+<body class="investigator-body">
+  <div class="background"></div>
+
+  <!-- Identifiant du joueur -->
+  <div class="player-id">
+    🕵️ Enquêteur 2
+  </div>
+
+  <!-- Activité de l'autre équipe -->
+  <div class="peer-activity" id="peer-activity"></div>
+
+  <!-- État de connexion -->
+  <div class="connection-status" id="connection-status">
+    <span class="status-text" id="status-text">Connexion...</span>
+  </div>
+
+  <!-- Info de partie -->
+  <div class="room-info" id="room-info">
+    <div>Mode 2v2: <span id="room-code-display">Équipe B</span></div>
+  </div>
+
+  <!-- Scores des équipes -->
+  <div class="team-score team-score-a" id="team-score-a">
+    <div class="team-name">Équipe A</div>
+    <div class="score-circles" id="team-a-circles">
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+    </div>
+    <div class="team-total"><span id="team-a-score">0</span>/5</div>
+  </div>
+  
+  <div class="team-score team-score-b active" id="team-score-b">
+    <div class="team-name">Équipe B</div>
+    <div class="score-circles" id="team-b-circles">
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+    </div>
+    <div class="team-total"><span id="team-b-score">0</span>/5</div>
+  </div>
+
+  <!-- Panneau de coordination -->
+  <div class="coordination-panel">
+    <div class="coordination-title">Coordination 2v2</div>
+    <div class="peer-status">
+      <div class="peer-indicator" id="peer-indicator"></div>
+      <span id="peer-status-text">Enquêteur 1: Déconnecté</span>
+    </div>
+    <div class="team-control">
+      <div class="team-switch-info">Auto-switch équipes</div>
+      <button class="control-btn" id="toggle-team-btn">Changer équipe</button>
+    </div>
+  </div>
+
+  <!-- Overlay de flash pour les animations -->
+  <div class="flash-overlay" id="flash-overlay"></div>
+
+  <!-- Écran principal -->
+  <main class="investigator-main">
+    <!-- Section d'attente -->
+    <section class="waiting-screen" id="waiting-screen">
+      <h1 class="investigator-title">
+        Enquêteur 2<span class="blinker">_</span>
+      </h1>
+      <p class="waiting-text">En attente de l'Accusé 2...</p>
+      <div class="loading-dots">
+        <span>.</span><span>.</span><span>.</span>
+      </div>
+      <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.7;">
+        Vous interrogez l'Accusé 2 • Équipe B
+      </div>
+    </section>
+
+    <!-- Section de jeu -->
+    <section class="game-screen" id="game-screen" style="display: none;">
+      <!-- Zone de saisie de question -->
+      <div class="question-input-container">
+        <div class="input-label">&gt; Votre question pour l'Accusé 2</div>
+        <textarea 
+          id="question-input" 
+          class="question-input" 
+          placeholder="Tapez votre question ici..."
+          maxlength="500"
+        ></textarea>
+        <div class="input-controls">
+          <button class="send-btn" id="send-question-btn">Envoyer</button>
+          <div class="char-count">
+            <span id="char-count">0</span>/500
+          </div>
+        </div>
+      </div>
+
+      <!-- Question actuelle -->
+      <div class="current-question-display">
+        <div class="current-label">Question envoyée:</div>
+        <div class="current-text" id="current-question-display">
+          Aucune question envoyée
+        </div>
+      </div>
+
+      <!-- Contrôles de validation -->
+      <div class="validation-controls">
+        <button class="validate-btn correct" id="correct-btn">
+          ✓ Bonne réponse
+        </button>
+        <button class="validate-btn incorrect" id="incorrect-btn">
+          ✗ Mauvaise réponse
+        </button>
+      </div>
+
+      <!-- Contrôles d'équipe -->
+      <div class="team-controls">
+        <button class="team-btn" id="reset-team-btn">Reset équipe active</button>
+        <button class="team-btn" id="toggle-active-team-btn">
+          Passer à l'équipe <span id="next-team">A</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Section de fin -->
+    <section class="end-screen" id="end-screen" style="display: none;">
+      <h2 class="end-title">Interrogatoire terminé</h2>
+      <div class="final-score">
+        <p>Scores finaux:</p>
+        <p>Équipe A: <span id="final-score-a">0</span>/5</p>
+        <p>Équipe B: <span id="final-score-b">0</span>/5</p>
+      </div>
+      <div class="end-message" id="end-message">
+        Interrogatoire terminé !
+      </div>
+      <button class="end-btn" id="restart-btn">Nouveau jeu</button>
+    </section>
+  </main>
+
+  <!-- Navigation -->
+  <nav class="investigator-nav">
+    <a href="/" class="nav-btn">&gt; Menu</a>
+  </nav>
+
+  <script>
+    // Configuration WebSocket - Enquêteur 2
+    // Configuration WebSocket - Use config.js if available
+    const wsUrl = window.ALIBI_CONFIG ? window.ALIBI_CONFIG.getWsUrl() : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'//${window.location.host}`;
+    let ws = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const playerRole = 'investigator2';
+
+    // État local
+    let gameState = {
+      teams: { A: { score: 0 }, B: { score: 0 } },
+      activeTeam: 'B', // Enquêteur 2 commence avec équipe B
+      currentQuestion: '',
+      status: 'waiting',
+      myRole: playerRole,
+      connections: {
+        accused1: false,
+        accused2: false,
+        investigator1: false,
+        investigator2: false
+      }
+    };
+
+    // Éléments DOM
+    const elements = {
+      statusText: document.getElementById('status-text'),
+      connectionStatus: document.getElementById('connection-status'),
+      roomInfo: document.getElementById('room-info'),
+      waitingScreen: document.getElementById('waiting-screen'),
+      gameScreen: document.getElementById('game-screen'),
+      endScreen: document.getElementById('end-screen'),
+      questionInput: document.getElementById('question-input'),
+      sendQuestionBtn: document.getElementById('send-question-btn'),
+      currentQuestionDisplay: document.getElementById('current-question-display'),
+      correctBtn: document.getElementById('correct-btn'),
+      incorrectBtn: document.getElementById('incorrect-btn'),
+      teamAScore: document.getElementById('team-a-score'),
+      teamBScore: document.getElementById('team-b-score'),
+      teamACircles: document.getElementById('team-a-circles'),
+      teamBCircles: document.getElementById('team-b-circles'),
+      teamScoreA: document.getElementById('team-score-a'),
+      teamScoreB: document.getElementById('team-score-b'),
+      flashOverlay: document.getElementById('flash-overlay'),
+      finalScoreA: document.getElementById('final-score-a'),
+      finalScoreB: document.getElementById('final-score-b'),
+      endMessage: document.getElementById('end-message'),
+      restartBtn: document.getElementById('restart-btn'),
+      resetTeamBtn: document.getElementById('reset-team-btn'),
+      toggleActiveTeamBtn: document.getElementById('toggle-active-team-btn'),
+      nextTeam: document.getElementById('next-team'),
+      charCount: document.getElementById('char-count'),
+      peerActivity: document.getElementById('peer-activity'),
+      peerIndicator: document.getElementById('peer-indicator'),
+      peerStatusText: document.getElementById('peer-status-text'),
+      toggleTeamBtn: document.getElementById('toggle-team-btn')
+    };
+
+    // Connexion WebSocket
+    function connectWebSocket() {
+      try {
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+          console.log('✅ Connexion WebSocket établie (Enquêteur 2)');
+          elements.statusText.textContent = 'Connecté • Synchronisation...';
+          elements.connectionStatus.style.display = 'block';
+          elements.roomInfo.style.display = 'block';
+          reconnectAttempts = 0;
+          
+          // S'enregistrer comme enquêteur 2
+          ws.send(JSON.stringify({
+            type: 'register',
+            role: playerRole
+          }));
+          
+          console.log('📡 Enregistrement envoyé - En attente de l\'état du jeu...');
+        };
+
+        ws.onmessage = function(event) {
+          try {
+            const message = JSON.parse(event.data);
+            handleWebSocketMessage(message);
+          } catch (error) {
+            console.error('❌ Erreur parsing message:', error);
+          }
+        };
+
+        ws.onclose = function() {
+          console.log('🔌 Connexion WebSocket fermée');
+          elements.statusText.textContent = 'Déconnecté';
+          
+          // Tentative de reconnexion
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`🔄 Tentative de reconnexion ${reconnectAttempts}/${maxReconnectAttempts}...`);
+            setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+          } else {
+            elements.statusText.textContent = 'Connexion perdue';
+          }
+        };
+
+        ws.onerror = function(error) {
+          console.error('❌ Erreur WebSocket:', error);
+          elements.statusText.textContent = 'Erreur de connexion';
+        };
+
+      } catch (error) {
+        console.error('❌ Erreur lors de la connexion:', error);
+        elements.statusText.textContent = 'Impossible de se connecter';
+      }
+    }
+
+    // Gestion des messages WebSocket
+    function handleWebSocketMessage(message) {
+      console.log('📨 Message reçu:', message);
+
+      switch (message.type) {
+        case 'gameState':
+          updateGameState(message.data);
+          break;
+        case 'feedback':
+          triggerFeedback(message.data.isCorrect);
+          break;
+        case 'scoreUpdate':
+          updateTeamScore(message.data.team, message.data.score, message.data.isCorrect);
+          if (message.data.answers) {
+            restoreTeamAnswers(message.data.team, message.data.answers);
+          }
+          break;
+        case 'teamReset':
+          resetTeamScore(message.data.team);
+          break;
+        case 'questionUpdate':
+          if (message.data.sender === playerRole) {
+            updateCurrentQuestion(message.data.question);
+          }
+          break;
+        case 'teamToggle':
+          setActiveTeam(message.data.activeTeam);
+          break;
+        case 'fullReset':
+          resetAllScores();
+          updateCurrentQuestion(message.data.question);
+          setActiveTeam(message.data.activeTeam);
+          break;
+        case 'gameStart':
+          startGame();
+          break;
+        case 'gameEnd':
+          endGame(message.data.finalScores);
+          break;
+        case 'connectionUpdate':
+          updateConnections(message.data.connections);
+          break;
+        case 'peerActivity':
+          showPeerActivity(message.data);
+          break;
+        default:
+          console.log('⚠️ Type de message non géré:', message.type);
+      }
+    }
+
+    // Afficher l'activité de l'autre équipe
+    function showPeerActivity(data) {
+      if (data.action === 'questionSent' && data.peer === 'investigator1') {
+        elements.peerActivity.textContent = `🔄 Enquêteur 1 → Accusé 1: "${data.question}"`;
+        elements.peerActivity.classList.add('show');
+        
+        setTimeout(() => {
+          elements.peerActivity.classList.remove('show');
+        }, 4000);
+      }
+    }
+
+    // Mettre à jour l'état des connexions
+    function updateConnections(connections) {
+      gameState.connections = connections;
+      
+      // Mettre à jour l'indicateur de l'enquêteur 1
+      if (connections.investigator1) {
+        elements.peerIndicator.classList.remove('offline');
+        elements.peerStatusText.textContent = 'Enquêteur 1: Connecté';
+      } else {
+        elements.peerIndicator.classList.add('offline');
+        elements.peerStatusText.textContent = 'Enquêteur 1: Déconnecté';
+      }
+
+      // Démarrer le jeu si l'accusé 2 est connecté
+      if (connections.accused2 && gameState.status === 'waiting') {
+        startGame();
+      }
+    }
+
+    // Envoyer une question
+    function sendQuestion() {
+      const question = elements.questionInput.value.trim();
+      if (!question || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+      console.log('📤 Envoi de la question:', question);
+      
+      ws.send(JSON.stringify({
+        type: 'question',
+        question: question,
+        sender: playerRole,
+        target: 'accused2'
+      }));
+
+      // Notification pour l'autre équipe
+      ws.send(JSON.stringify({
+        type: 'peerActivity',
+        action: 'questionSent',
+        question: question,
+        peer: playerRole
+      }));
+
+      elements.questionInput.value = '';
+      updateCharCount();
+    }
+
+    // Valider une réponse
+    function validateAnswer(isCorrect) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      
+      console.log('📤 Validation:', isCorrect ? 'Correcte' : 'Incorrecte');
+      
+      ws.send(JSON.stringify({
+        type: 'validate',
+        isCorrect: isCorrect,
+        team: gameState.activeTeam,
+        sender: playerRole
+      }));
+    }
+
+    // Fonctions utilitaires (identiques à enquêteur 1)
+    function updateGameState(newState) {
+      gameState = { ...gameState, ...newState };
+      console.log('🔄 État du jeu mis à jour:', gameState);
+      
+      updateTeamScore('A', gameState.teams.A.score);
+      updateTeamScore('B', gameState.teams.B.score);
+      
+      if (gameState.teams.A.answers) {
+        restoreTeamAnswers('A', gameState.teams.A.answers);
+      }
+      if (gameState.teams.B.answers) {
+        restoreTeamAnswers('B', gameState.teams.B.answers);
+      }
+      
+      updateCurrentQuestion(gameState.currentQuestion);
+      setActiveTeam(gameState.activeTeam);
+      
+      if (gameState.status === 'playing') {
+        startGame();
+      } else if (gameState.status === 'ended') {
+        endGame(gameState.teams);
+      }
+      
+      if (elements.statusText.textContent.includes('Synchronisation')) {
+        elements.statusText.textContent = gameState.status === 'playing' ? 
+          'Connecté • Interrogatoire en cours' : 'Connecté • En attente';
+      }
+    }
+
+    function restoreTeamAnswers(team, answers) {
+      const circlesElement = team === 'A' ? elements.teamACircles : elements.teamBCircles;
+      
+      if (circlesElement && answers) {
+        const circles = circlesElement.querySelectorAll('.score-circle');
+        circles.forEach((circle, index) => {
+          if (index < answers.length) {
+            const answer = answers[index];
+            circle.className = answer.correct ? 'score-circle correct' : 'score-circle incorrect';
+          } else {
+            circle.className = 'score-circle pending';
+          }
+        });
+      }
+    }
+
+    function startGame() {
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'block';
+      elements.endScreen.style.display = 'none';
+      elements.statusText.textContent = 'Connecté • Interrogatoire en cours';
+    }
+
+    function endGame(finalScores) {
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'none';
+      elements.endScreen.style.display = 'block';
+      elements.statusText.textContent = 'Connecté • Terminé';
+      
+      elements.finalScoreA.textContent = finalScores.A.score;
+      elements.finalScoreB.textContent = finalScores.B.score;
+      
+      if (finalScores.A.score > finalScores.B.score) {
+        elements.endMessage.textContent = 'Équipe A gagne !';
+      } else if (finalScores.B.score > finalScores.A.score) {
+        elements.endMessage.textContent = 'Équipe B gagne !';
+      } else {
+        elements.endMessage.textContent = 'Match nul !';
+      }
+    }
+
+    function updateCurrentQuestion(question) {
+      if (elements.currentQuestionDisplay) {
+        elements.currentQuestionDisplay.textContent = question || 'Aucune question envoyée';
+      }
+    }
+
+    function updateTeamScore(team, score, isCorrect = null) {
+      const scoreElement = team === 'A' ? elements.teamAScore : elements.teamBScore;
+      const circlesElement = team === 'A' ? elements.teamACircles : elements.teamBCircles;
+      
+      if (scoreElement) {
+        scoreElement.textContent = score;
+      }
+      
+      if (circlesElement) {
+        const circles = circlesElement.querySelectorAll('.score-circle');
+        circles.forEach((circle, index) => {
+          if (index < score) {
+            if (isCorrect !== null && index === score - 1) {
+              circle.className = isCorrect ? 'score-circle correct' : 'score-circle incorrect';
+            } else if (!circle.classList.contains('correct') && !circle.classList.contains('incorrect')) {
+              circle.className = 'score-circle correct';
+            }
+          } else {
+            circle.className = 'score-circle pending';
+          }
+        });
+      }
+    }
+
+    function resetTeamScore(team) {
+      updateTeamScore(team, 0);
+      ws.send(JSON.stringify({
+        type: 'resetTeam',
+        team: team,
+        sender: playerRole
+      }));
+    }
+
+    function resetAllScores() {
+      resetTeamScore('A');
+      resetTeamScore('B');
+    }
+
+    function setActiveTeam(team) {
+      gameState.activeTeam = team;
+      
+      if (team === 'A') {
+        elements.teamScoreA.classList.add('active');
+        elements.teamScoreB.classList.remove('active');
+        elements.nextTeam.textContent = 'B';
+      } else {
+        elements.teamScoreB.classList.add('active');
+        elements.teamScoreA.classList.remove('active');
+        elements.nextTeam.textContent = 'A';
+      }
+    }
+
+    function toggleActiveTeam() {
+      const newTeam = gameState.activeTeam === 'A' ? 'B' : 'A';
+      
+      ws.send(JSON.stringify({
+        type: 'toggleTeam',
+        activeTeam: newTeam,
+        sender: playerRole
+      }));
+    }
+
+    function updateCharCount() {
+      const count = elements.questionInput.value.length;
+      elements.charCount.textContent = count;
+    }
+
+    function triggerFeedback(isCorrect) {
+      const body = document.body;
+      
+      if (isCorrect) {
+        elements.flashOverlay.className = 'flash-overlay success';
+        body.classList.add('feedback-success-global');
+        
+        if (navigator.vibrate) {
+          navigator.vibrate([50, 30, 50]);
+        }
+        
+        setTimeout(() => {
+          elements.flashOverlay.className = 'flash-overlay';
+          body.classList.remove('feedback-success-global');
+        }, 1200);
+        
+      } else {
+        elements.flashOverlay.className = 'flash-overlay error';
+        body.classList.add('feedback-error-global', 'shake-global');
+        
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100, 50, 100]);
+        }
+        
+        setTimeout(() => {
+          elements.flashOverlay.className = 'flash-overlay';
+          body.classList.remove('feedback-error-global', 'shake-global');
+        }, 1200);
+      }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🕵️ Page Enquêteur 2 initialisée');
+      
+      // Saisie de question
+      elements.questionInput.addEventListener('input', updateCharCount);
+      elements.questionInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendQuestion();
+        }
+      });
+      
+      // Boutons de contrôle
+      elements.sendQuestionBtn.addEventListener('click', sendQuestion);
+      elements.correctBtn.addEventListener('click', () => validateAnswer(true));
+      elements.incorrectBtn.addEventListener('click', () => validateAnswer(false));
+      elements.resetTeamBtn.addEventListener('click', () => resetTeamScore(gameState.activeTeam));
+      elements.toggleActiveTeamBtn.addEventListener('click', toggleActiveTeam);
+      elements.toggleTeamBtn.addEventListener('click', toggleActiveTeam);
+      
+      elements.restartBtn.addEventListener('click', function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'restart',
+            sender: playerRole
+          }));
+        }
+      });
+      
+      connectWebSocket();
+    });
+
+    // Gestion de la fermeture de la page
+    window.addEventListener('beforeunload', function() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    });
+  </script>
+</body>
+</html>

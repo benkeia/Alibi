@@ -1,0 +1,10 @@
+{
+  "name": "@alibi/web",
+  "version": "1.0.0",
+  "description": "Alibi Game - Frontend (Vercel)",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "preview": "python3 -m http.server 3000"
+  }
+}

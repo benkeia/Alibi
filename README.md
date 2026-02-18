@@ -2,7 +2,30 @@
 
 Un jeu d'interrogatoire en temps réel utilisant WebSocket pour la communication entre accusés et enquêteurs.
 
-## 🚀 Démarrage Rapide
+## 📦 Structure Monorepo (Compatible Vercel)
+
+Ce projet est organisé en monorepo pour faciliter le déploiement:
+
+```
+Alibi/
+├── apps/
+│   ├── web/              # Frontend statique → Déployé sur Vercel
+│   └── server/           # Serveur WebSocket → Déployé sur Railway/Render
+├── VERCEL_DEPLOY.md      # Guide de déploiement détaillé
+└── README.md             # Ce fichier
+```
+
+## 🚀 Déploiement
+
+### Frontend (Vercel)
+Le frontend peut être déployé sur Vercel en quelques clics. Voir [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) pour les instructions détaillées.
+
+### Backend (Railway/Render)
+Le serveur WebSocket doit être hébergé sur une plateforme supportant les WebSockets (Railway, Render, Fly.io, etc.)
+
+📖 **Guide complet de déploiement**: [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md)
+
+## 🚀 Démarrage Rapide (Développement Local)
 
 ### Prérequis
 - Node.js (version 14 ou supérieure)
@@ -12,18 +35,24 @@ Un jeu d'interrogatoire en temps réel utilisant WebSocket pour la communication
 
 1. **Démarrer le serveur :**
    ```bash
+   # Option 1: Script de démarrage legacy (racine)
    ./start.sh
+   
+   # Option 2: Depuis le monorepo
+   cd apps/server
+   npm install
+   npm start
    ```
    
-   Ou manuellement :
+   Ou depuis la racine avec les scripts monorepo:
    ```bash
-   npm install
-   node server.js
+   npm run dev:server
    ```
 
 2. **Accéder au jeu :**
    - Serveur local : `http://localhost:3000`
    - Réseau local : `http://[ADRESSE_IP]:3000` (l'IP s'affiche au démarrage)
+   - Frontend séparé : Ouvrir `apps/web/index.html` dans un navigateur
 
 ## 🎮 Comment Jouer
 
@@ -87,17 +116,24 @@ Un jeu d'interrogatoire en temps réel utilisant WebSocket pour la communication
 ## 🔧 Structure du Projet
 
 ```
-test_alibi/
-├── server.js              # Serveur WebSocket Node.js
-├── package.json           # Dépendances Node.js
-├── start.sh              # Script de démarrage
-├── index.html            # Page d'accueil
-├── accused.html          # Interface accusé
-├── investigator.html     # Interface enquêteur
-├── style.css             # Styles communs
-└── css/
-    ├── accuse.css        # Styles spécifiques accusé
-    └── investigator.css  # Styles spécifiques enquêteur
+Alibi/
+├── apps/
+│   ├── web/              # Frontend (Vercel-ready)
+│   │   ├── *.html        # Pages du jeu
+│   │   ├── config.js     # Configuration WebSocket
+│   │   ├── style.css
+│   │   └── css/          # Styles
+│   └── server/           # Backend WebSocket
+│       ├── server.js     # Serveur principal
+│       └── package.json
+├── vercel.json           # Configuration Vercel
+├── VERCEL_DEPLOY.md      # Guide de déploiement
+└── README.md             # Documentation
+
+# Legacy (fichiers à la racine pour compatibilité)
+├── server.js             # Serveur legacy
+├── *.html                # Pages legacy
+└── style.css             # Styles legacy
 ```
 
 ## 🛠 API WebSocket
@@ -183,6 +219,30 @@ const questions = [
 - **Appareils** : Desktop, tablettes, smartphones
 - **Réseau** : Wi-Fi local, pas besoin d'internet
 - **Responsive** : Interface adaptative pour tous les écrans
+
+## 🌐 Déploiement Production
+
+### Vercel + Railway/Render (Recommandé)
+
+1. **Frontend sur Vercel**: 
+   - Déployez `apps/web` sur Vercel
+   - Configuration automatique avec `vercel.json`
+   
+2. **Backend WebSocket sur Railway**:
+   - Déployez `apps/server` sur Railway
+   - Le serveur WebSocket nécessite une plateforme avec support WebSocket
+   
+3. **Configuration**:
+   - Mettez à jour `apps/web/config.js` avec l'URL de votre serveur WebSocket
+   - Voir [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) pour le guide complet
+
+### Alternatives
+
+- **Netlify** (frontend) + **Render** (backend)
+- **GitHub Pages** (frontend) + **Fly.io** (backend)
+- **Cloudflare Pages** (frontend) + **Railway** (backend)
+
+📖 **Documentation complète**: [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md)
 
 ---
 

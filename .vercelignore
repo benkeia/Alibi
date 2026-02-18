@@ -1,0 +1,18 @@
+# Ignored files for Vercel deployment
+node_modules
+.DS_Store
+*.log
+.env
+.env.local
+apps/server
+gamestate.json
+package-lock.json
+start.sh
+render.yaml
+
+# Keep only apps/web for Vercel
+*.php
+accused.php
+server.js
+server_old.js
+server_new.js

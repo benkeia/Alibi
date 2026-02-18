@@ -1,0 +1,48 @@
+{
+  "teams": {
+    "A": {
+      "score": 0,
+      "answers": []
+    },
+    "B": {
+      "score": 0,
+      "answers": []
+    }
+  },
+  "activeTeam": "A",
+  "currentQuestion": "Où étiez-vous le 15 mars entre 14h et 16h ?",
+  "questionIndex": 0,
+  "status": "playing",
+  "players": {
+    "investigator1": {
+      "connected": true,
+      "name": "Enquêteur 1",
+      "currentQuestion": "",
+      "team": "A"
+    },
+    "investigator2": {
+      "connected": true,
+      "name": "Enquêteur 2",
+      "currentQuestion": "",
+      "team": "B"
+    },
+    "accused1": {
+      "connected": false,
+      "name": "Accusé 1",
+      "assignedTo": "investigator1"
+    },
+    "accused2": {
+      "connected": true,
+      "name": "Accusé 2",
+      "assignedTo": "investigator2"
+    }
+  },
+  "currentActiveInvestigator": "investigator1",
+  "connectionsCount": {
+    "accused1": 0,
+    "accused2": 0,
+    "investigator1": 0,
+    "investigator2": 0
+  },
+  "lastSaved": "2025-09-05T12:20:40.099Z"
+}

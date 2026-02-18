@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accusé • Alibi</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/accuse.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="/config.js"></script>
+</head>
+<body class="accused-body">
+  <div class="background"></div>
+
+  <!-- État de connexion -->
+  <div class="connection-status" id="connection-status">
+    <span class="status-text" id="status-text">Connexion...</span>
+  </div>
+
+  <!-- Notification d'activation audio -->
+  <div class="audio-activation-notice" id="audio-activation-notice">
+    <div class="audio-notice-content">
+      <p>🔊 Cliquez n'importe où pour activer les sons</p>
+      <small>Les navigateurs nécessitent une interaction pour jouer les sons</small>
+    </div>
+  </div>
+
+  <!-- Info de partie -->
+  <div class="room-info" id="room-info">
+    <div>Interrogatoire: <span id="room-code-display">ALIBI-GAME</span></div>
+  </div>
+
+  <!-- Scores des équipes -->
+  <div class="team-score team-score-a active" id="team-score-a">
+    <div class="team-name">Équipe A</div>
+    <div class="score-circles" id="team-a-circles">
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+    </div>
+    <div class="team-total"><span id="team-a-score">0</span>/5</div>
+  </div>
+  
+  <div class="team-score team-score-b" id="team-score-b">
+    <div class="team-name">Équipe B</div>
+    <div class="score-circles" id="team-b-circles">
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+      <span class="score-circle pending"></span>
+    </div>
+    <div class="team-total"><span id="team-b-score">0</span>/5</div>
+  </div>
+
+  <!-- Overlay de flash pour les animations -->
+  <div class="flash-overlay" id="flash-overlay"></div>
+
+  <!-- Éléments audio pour les feedbacks -->
+  <audio id="correct-sound" preload="auto">
+    <source src="/sounds/right.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="incorrect-sound" preload="auto">
+    <source src="/sounds/wrong.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Écran principal -->
+  <main class="accused-main">
+    <!-- Section d'affichage de l'alibi -->
+    <section class="alibi-display-screen" id="alibi-display-screen" style="display: none;">
+      <div class="alibi-timer" id="alibi-timer">30</div>
+      <div class="alibi-crime-title" id="alibi-crime-title">Crime</div>
+      <div class="alibi-players" id="alibi-players">
+        <span id="player1-display">Joueur 1</span> et <span id="player2-display">Joueur 2</span>
+      </div>
+      <div class="alibi-content" id="alibi-content">
+        Votre alibi s'affiche ici...
+      </div>
+    </section>
+
+    <!-- Section d'attente -->
+    <section class="waiting-screen" id="waiting-screen">
+      <h1 class="accused-title">
+        Accusé<span class="blinker">_</span>
+      </h1>
+      <p class="waiting-text">En attente du début de l'interrogatoire...</p>
+      <div class="loading-dots">
+        <span>.</span><span>.</span><span>.</span>
+      </div>
+    </section>
+
+    <!-- Section de jeu -->
+    <section class="game-screen" id="game-screen" style="display: none;">
+      <!-- Question centrale -->
+      <div class="question-container">
+        <div class="question-label">&gt; Question actuelle</div>
+        <div class="question-text" id="current-question">
+          En attente d'une question...
+        </div>
+      </div>
+
+      <!-- Section alibi -->
+      <div class="alibi-section" id="alibi-section" style="display: none;">
+        <h2>📜 Votre Alibi</h2>
+        <p id="alibiFull" class="alibi-text">Chargement de votre alibi...</p>
+      </div>
+    </section>
+
+    <!-- Section de fin -->
+    <section class="end-screen" id="end-screen" style="display: none;">
+      <h2 class="end-title">Interrogatoire terminé</h2>
+      <div class="final-score">
+        <p>Scores finaux:</p>
+        <p>Équipe A: <span id="final-score-a">0</span>/5</p>
+        <p>Équipe B: <span id="final-score-b">0</span>/5</p>
+      </div>
+      <div class="end-message" id="end-message">
+        Merci d'avoir participé à l'interrogatoire !
+      </div>
+    </section>
+  </main>
+
+  <!-- Navigation -->
+  <nav class="accused-nav">
+    <a href="/" class="nav-btn">&gt; Menu</a>
+  </nav>
+
+  <script>
+    // Configuration WebSocket - Use config.js if available
+    const wsUrl = window.ALIBI_CONFIG ? window.ALIBI_CONFIG.getWsUrl() : 
+                  `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+    
+    // Détection automatique du code de room depuis l'URL
+    const pathParts = window.location.pathname.split('/');
+    const roomCode = pathParts.length >= 3 && pathParts[1] === 'room' ? pathParts[2] : null;
+    
+    let ws = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    // Charger la configuration de jeu depuis localStorage
+    let gameConfig = null;
+    try {
+      const savedConfig = localStorage.getItem('gameConfig');
+      if (savedConfig) {
+        gameConfig = JSON.parse(savedConfig);
+        console.log('Configuration de jeu chargée:', gameConfig);
+        
+        // Afficher l'alibi configuré
+        if (gameConfig.alibi && gameConfig.alibi.text) {
+          document.getElementById('alibiFull').textContent = gameConfig.alibi.text;
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration:', error);
+    }
+
+    // Si aucune configuration n'est trouvée, utiliser un alibi par défaut
+    if (!gameConfig || !gameConfig.alibi) {
+      document.getElementById('alibiFull').textContent = 
+        "Le 15 mars, j'étais chez ma grand-mère pour l'aider à faire ses courses. Nous avons pris le bus ensemble vers 14h30 pour aller au marché de la place du village. Elle voulait acheter des légumes frais pour préparer le repas du dimanche. Nous avons passé environ une heure et demie au marché, puis nous sommes rentrées chez elle vers 16h15. J'ai aidé à ranger les courses et nous avons pris le thé ensemble avant que je reparte chez moi vers 17h.";
+    }
+
+    // État local
+    let gameState = {
+      teams: { A: { score: 0 }, B: { score: 0 } },
+      activeTeam: 'A',
+      currentQuestion: '',
+      status: 'waiting'
+    };
+
+    // Variables pour la phase alibi
+    let alibiTimer = null;
+    let alibiTimeLeft = 30;
+
+    // Variables pour la gestion audio
+    let audioEnabled = false;
+    let audioActivationShown = true; // Déjà affiché dès le début
+
+    // Éléments DOM
+    const elements = {
+      statusText: document.getElementById('status-text'),
+      connectionStatus: document.getElementById('connection-status'),
+      roomInfo: document.getElementById('room-info'),
+      waitingScreen: document.getElementById('waiting-screen'),
+      gameScreen: document.getElementById('game-screen'),
+      endScreen: document.getElementById('end-screen'),
+      alibiDisplayScreen: document.getElementById('alibi-display-screen'),
+      currentQuestion: document.getElementById('current-question'),
+      teamAScore: document.getElementById('team-a-score'),
+      teamBScore: document.getElementById('team-b-score'),
+      teamACircles: document.getElementById('team-a-circles'),
+      teamBCircles: document.getElementById('team-b-circles'),
+      teamScoreA: document.getElementById('team-score-a'),
+      teamScoreB: document.getElementById('team-score-b'),
+      flashOverlay: document.getElementById('flash-overlay'),
+      finalScoreA: document.getElementById('final-score-a'),
+      finalScoreB: document.getElementById('final-score-b'),
+      endMessage: document.getElementById('end-message'),
+      alibiTimer: document.getElementById('alibi-timer'),
+      alibiCrimeTitle: document.getElementById('alibi-crime-title'),
+      alibiPlayers: document.getElementById('alibi-players'),
+      alibiContent: document.getElementById('alibi-content'),
+      player1Display: document.getElementById('player1-display'),
+      player2Display: document.getElementById('player2-display'),
+      alibiSection: document.getElementById('alibi-section'),
+      audioActivationNotice: document.getElementById('audio-activation-notice')
+    };
+
+    // Connexion WebSocket
+    function connectWebSocket() {
+      try {
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+          console.log('✅ Connexion WebSocket établie');
+          elements.statusText.textContent = 'Connecté • Synchronisation...';
+          elements.connectionStatus.style.display = 'block';
+          elements.roomInfo.style.display = 'block';
+          reconnectAttempts = 0;
+          
+          // S'enregistrer comme accusé
+          const registerMessage = {
+            type: 'register',
+            role: 'accused'
+          };
+          
+          // Ajouter le code de room si disponible
+          if (roomCode) {
+            registerMessage.roomCode = roomCode;
+          }
+          
+          ws.send(JSON.stringify(registerMessage));
+          
+          console.log('📡 Enregistrement envoyé - En attente de l\'état du jeu...');
+        };
+
+        ws.onmessage = function(event) {
+          try {
+            const message = JSON.parse(event.data);
+            handleWebSocketMessage(message);
+          } catch (error) {
+            console.error('❌ Erreur parsing message:', error);
+          }
+        };
+
+        ws.onclose = function() {
+          console.log('🔌 Connexion WebSocket fermée');
+          elements.statusText.textContent = 'Déconnecté';
+          
+          // Tentative de reconnexion
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`🔄 Tentative de reconnexion ${reconnectAttempts}/${maxReconnectAttempts}...`);
+            setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+          } else {
+            elements.statusText.textContent = 'Connexion perdue';
+          }
+        };
+
+        ws.onerror = function(error) {
+          console.error('❌ Erreur WebSocket:', error);
+          elements.statusText.textContent = 'Erreur de connexion';
+        };
+
+      } catch (error) {
+        console.error('❌ Erreur lors de la connexion:', error);
+        elements.statusText.textContent = 'Impossible de se connecter';
+      }
+    }
+
+    // Gestion des messages WebSocket
+    function handleWebSocketMessage(message) {
+      console.log('📨 Message reçu:', message);
+
+      switch (message.type) {
+        case 'gameState':
+          // Mise à jour de l'état complet du jeu
+          updateGameState(message.data);
+          break;
+
+        case 'feedback':
+          // Feedback visuel (correct/incorrect)
+          triggerFeedback(message.data.isCorrect);
+          break;
+
+        case 'scoreUpdate':
+          // Mise à jour du score d'une équipe
+          updateTeamScore(message.data.team, message.data.score, message.data.isCorrect);
+          // Mettre à jour l'historique local si fourni
+          if (message.data.answers) {
+            restoreTeamAnswers(message.data.team, message.data.answers);
+          }
+          break;
+
+        case 'teamReset':
+          // Reset d'une équipe
+          resetTeamScore(message.data.team);
+          break;
+
+        case 'questionUpdate':
+          // Nouvelle question
+          updateQuestion(message.data.question);
+          break;
+
+        case 'teamToggle':
+          // Changement d'équipe active
+          setActiveTeam(message.data.activeTeam);
+          break;
+
+        case 'fullReset':
+          // Reset complet
+          resetAllScores();
+          updateQuestion(message.data.question);
+          setActiveTeam(message.data.activeTeam);
+          break;
+
+        case 'gameStart':
+          // Début du jeu
+          startGame();
+          break;
+
+        case 'gameEnd':
+          // Fin du jeu
+          endGame(message.data.finalScores);
+          break;
+
+        case 'startAlibiPhase':
+          // Démarrage de la phase alibi
+          startAlibiPhase(message.data);
+          break;
+
+        default:
+          console.log('⚠️ Type de message non géré:', message.type);
+      }
+    }
+
+    // Mise à jour de l'état du jeu
+    function updateGameState(newState) {
+      gameState = { ...gameState, ...newState };
+      
+      console.log('🔄 État du jeu mis à jour:', gameState);
+      
+      // Mettre à jour l'affichage des scores
+      updateTeamScore('A', gameState.teams.A.score);
+      updateTeamScore('B', gameState.teams.B.score);
+      
+      // Restaurer les cercles de score avec l'historique
+      if (gameState.teams.A.answers) {
+        restoreTeamAnswers('A', gameState.teams.A.answers);
+      }
+      if (gameState.teams.B.answers) {
+        restoreTeamAnswers('B', gameState.teams.B.answers);
+      }
+      
+      // Mettre à jour la question et l'équipe active
+      updateQuestion(gameState.currentQuestion);
+      setActiveTeam(gameState.activeTeam);
+      
+      // Gérer l'état du jeu
+      if (gameState.status === 'playing') {
+        startGame();
+      } else if (gameState.status === 'ended') {
+        endGame(gameState.teams);
+      }
+      
+      // Mettre à jour le statut pour indiquer que la synchronisation est terminée
+      if (elements.statusText.textContent.includes('Synchronisation')) {
+        elements.statusText.textContent = gameState.status === 'playing' ? 
+          'Connecté • Interrogatoire en cours' : 'Connecté • En attente';
+      }
+    }
+
+    // Restaurer l'historique des réponses d'une équipe
+    function restoreTeamAnswers(team, answers) {
+      const circlesElement = team === 'A' ? elements.teamACircles : elements.teamBCircles;
+      
+      if (circlesElement && answers) {
+        const circles = circlesElement.querySelectorAll('.score-circle');
+        circles.forEach((circle, index) => {
+          if (index < answers.length) {
+            const answer = answers[index];
+            circle.className = answer.correct ? 'score-circle correct' : 'score-circle incorrect';
+          } else {
+            circle.className = 'score-circle pending';
+          }
+        });
+      }
+    }
+
+    // Démarrer le jeu
+    function startGame() {
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'block';
+      elements.endScreen.style.display = 'none';
+      elements.statusText.textContent = 'Connecté • Interrogatoire en cours';
+    }
+
+    // Terminer le jeu
+    function endGame(finalScores) {
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'none';
+      elements.endScreen.style.display = 'block';
+      elements.statusText.textContent = 'Connecté • Terminé';
+      
+      elements.finalScoreA.textContent = finalScores.A.score;
+      elements.finalScoreB.textContent = finalScores.B.score;
+      
+      // Déterminer le gagnant
+      if (finalScores.A.score > finalScores.B.score) {
+        elements.endMessage.textContent = 'Équipe A gagne !';
+      } else if (finalScores.B.score > finalScores.A.score) {
+        elements.endMessage.textContent = 'Équipe B gagne !';
+      } else {
+        elements.endMessage.textContent = 'Match nul !';
+      }
+    }
+
+    // Mettre à jour une question
+    function updateQuestion(question) {
+      if (elements.currentQuestion) {
+        elements.currentQuestion.textContent = question;
+      }
+    }
+
+    // Mettre à jour le score d'une équipe
+    function updateTeamScore(team, score, isCorrect = null) {
+      const scoreElement = team === 'A' ? elements.teamAScore : elements.teamBScore;
+      const circlesElement = team === 'A' ? elements.teamACircles : elements.teamBCircles;
+      
+      if (scoreElement) {
+        scoreElement.textContent = score;
+      }
+      
+      if (circlesElement) {
+        const circles = circlesElement.querySelectorAll('.score-circle');
+        circles.forEach((circle, index) => {
+          if (index < score) {
+            // Pour les cercles remplis, on détermine s'ils sont corrects ou incorrects
+            // Pour simplifier, on considère que les derniers points ajoutés correspondent au type
+            if (isCorrect !== null && index === score - 1) {
+              circle.className = isCorrect ? 'score-circle correct' : 'score-circle incorrect';
+            } else if (!circle.classList.contains('correct') && !circle.classList.contains('incorrect')) {
+              circle.className = 'score-circle correct'; // Par défaut correct si pas spécifié
+            }
+          } else {
+            circle.className = 'score-circle pending';
+          }
+        });
+      }
+    }
+
+    // Reset du score d'une équipe
+    function resetTeamScore(team) {
+      updateTeamScore(team, 0);
+    }
+
+    // Reset de tous les scores
+    function resetAllScores() {
+      resetTeamScore('A');
+      resetTeamScore('B');
+    }
+
+    // Définir l'équipe active
+    function setActiveTeam(team) {
+      if (team === 'A') {
+        elements.teamScoreA.classList.add('active');
+        elements.teamScoreB.classList.remove('active');
+      } else {
+        elements.teamScoreB.classList.add('active');
+        elements.teamScoreA.classList.remove('active');
+      }
+    }
+
+    // Feedback visuel
+    function triggerFeedback(isCorrect) {
+      const body = document.body;
+      
+      // Jouer le son approprié
+      playFeedbackSound(isCorrect);
+      
+      if (isCorrect) {
+        // Effet de succès
+        elements.flashOverlay.className = 'flash-overlay success';
+        body.classList.add('feedback-success-global');
+        
+        // Vibration success (si supportée)
+        if (navigator.vibrate) {
+          navigator.vibrate([50, 30, 50]);
+        }
+        
+        setTimeout(() => {
+          elements.flashOverlay.className = 'flash-overlay';
+          body.classList.remove('feedback-success-global');
+        }, 1200);
+        
+      } else {
+        // Effet d'erreur
+        elements.flashOverlay.className = 'flash-overlay error';
+        body.classList.add('feedback-error-global', 'shake-global');
+        
+        // Vibration error (si supportée)
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100, 50, 100]);
+        }
+        
+        setTimeout(() => {
+          elements.flashOverlay.className = 'flash-overlay';
+          body.classList.remove('feedback-error-global', 'shake-global');
+        }, 1200);
+      }
+    }
+
+    // Fonction pour jouer les sons de feedback
+    function playFeedbackSound(isCorrect) {
+      if (!audioEnabled) {
+        return; // Ne pas essayer de jouer si l'audio n'est pas activé
+      }
+      
+      try {
+        const soundElement = isCorrect ? 
+          document.getElementById('correct-sound') : 
+          document.getElementById('incorrect-sound');
+        
+        if (soundElement) {
+          soundElement.currentTime = 0; // Remettre au début
+          soundElement.volume = 0.7; // Volume à 70%
+          soundElement.play().catch(error => {
+            console.warn('Impossible de jouer le son:', error);
+            // Si on ne peut toujours pas jouer, désactiver l'audio
+            audioEnabled = false;
+          });
+        }
+      } catch (error) {
+        console.warn('Erreur lors de la lecture du son:', error);
+        audioEnabled = false;
+      }
+    }
+
+    // Fonction pour activer l'audio après interaction utilisateur
+    function enableAudio() {
+      if (audioEnabled) return;
+      
+      try {
+        // Tenter de jouer un son muet pour débloquer l'audio
+        const testAudio = document.getElementById('correct-sound');
+        if (testAudio) {
+          testAudio.volume = 0; // Muet pour le test
+          testAudio.play().then(() => {
+            testAudio.pause();
+            testAudio.currentTime = 0;
+            testAudio.volume = 0.7; // Remettre le volume normal
+            audioEnabled = true;
+            elements.audioActivationNotice.style.display = 'none';
+            console.log('✅ Audio activé');
+          }).catch(error => {
+            console.warn('Impossible d\'activer l\'audio:', error);
+          });
+        }
+      } catch (error) {
+        console.warn('Erreur lors de l\'activation audio:', error);
+      }
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🎮 Page Accusé initialisée');
+      connectWebSocket();
+      
+      // Afficher la notification d'activation audio dès le début
+      elements.audioActivationNotice.style.display = 'block';
+      
+      // Ajouter des écouteurs pour activer l'audio sur interaction
+      ['click', 'touch', 'keydown'].forEach(eventType => {
+        document.addEventListener(eventType, enableAudio, { once: false });
+      });
+    });
+
+    // Gestion de la fermeture de la page
+    window.addEventListener('beforeunload', function() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    });
+
+    // Fonctions pour la phase alibi
+    function startAlibiPhase(data) {
+      console.log('🎭 Démarrage de la phase alibi:', data);
+      
+      // Afficher les informations de l'alibi
+      elements.alibiCrimeTitle.textContent = data.crime;
+      elements.player1Display.textContent = data.player1;
+      elements.player2Display.textContent = data.player2;
+      elements.alibiContent.textContent = data.alibiText;
+      
+      // Mettre à jour les questions prédéfinies pour plus tard
+      if (data.questions) {
+        // Stocker les questions dans localStorage pour usage ultérieur
+        localStorage.setItem('alibiQuestions', JSON.stringify(data.questions));
+      }
+      
+      // Cacher TOUS les autres éléments pendant la phase alibi
+      elements.waitingScreen.style.display = 'none';
+      elements.gameScreen.style.display = 'none';
+      elements.endScreen.style.display = 'none';
+      elements.connectionStatus.style.display = 'none';
+      elements.roomInfo.style.display = 'none';
+      elements.teamScoreA.style.display = 'none';
+      elements.teamScoreB.style.display = 'none';
+      
+      // Afficher uniquement l'écran alibi
+      elements.alibiDisplayScreen.style.display = 'flex';
+      
+      // Démarrer le timer
+      alibiTimeLeft = 30;
+      startAlibiTimer();
+    }
+
+    function startAlibiTimer() {
+      elements.alibiTimer.textContent = alibiTimeLeft;
+      
+      alibiTimer = setInterval(() => {
+        alibiTimeLeft--;
+        elements.alibiTimer.textContent = alibiTimeLeft;
+        
+        // Changer la couleur du timer selon le temps restant
+        if (alibiTimeLeft <= 5) {
+          elements.alibiTimer.className = 'alibi-timer danger';
+        } else if (alibiTimeLeft <= 10) {
+          elements.alibiTimer.className = 'alibi-timer warning';
+        } else {
+          elements.alibiTimer.className = 'alibi-timer';
+        }
+        
+        // Fin du timer
+        if (alibiTimeLeft <= 0) {
+          clearInterval(alibiTimer);
+          endAlibiPhase();
+        }
+      }, 1000);
+    }
+
+    function endAlibiPhase() {
+      console.log('⏰ Fin de la phase alibi');
+      
+      // Cacher complètement l'écran alibi
+      elements.alibiDisplayScreen.style.display = 'none';
+      
+      // Restaurer l'affichage normal SAUF la section alibi qui doit rester cachée
+      elements.connectionStatus.style.display = 'block';
+      elements.roomInfo.style.display = 'block';
+      elements.teamScoreA.style.display = 'block';
+      elements.teamScoreB.style.display = 'block';
+      elements.gameScreen.style.display = 'block';
+      elements.alibiSection.style.display = 'none'; // Garder l'alibi caché pendant les questions
+      
+      // Charger les questions de l'alibi depuis localStorage
+      try {
+        const alibiQuestions = localStorage.getItem('alibiQuestions');
+        if (alibiQuestions) {
+          const questions = JSON.parse(alibiQuestions);
+          console.log('📋 Questions d\'alibi chargées:', questions);
+          
+          // Notifier l'enquêteur que les questions d'alibi sont prêtes
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'alibiQuestionsReady',
+              questions: questions
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des questions d\'alibi:', error);
+      }
+      
+      // Mettre à jour le statut
+      elements.statusText.textContent = 'Connecté • Interrogatoire en cours';
+    }
+  </script>
+</body>
+</html>
