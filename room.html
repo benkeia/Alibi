@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,10 +14,11 @@
       background: rgba(3, 255, 152, 0.04);
       border-radius: 12px;
       border: 1.5px solid var(--color-accent);
-      box-shadow: 0 0 32px rgba(3,255,152,0.08);
+      box-shadow: 0 0 32px rgba(3, 255, 152, 0.08);
       text-align: center;
       font-family: var(--font-body);
     }
+
     .room-code {
       font-size: 2.8rem;
       font-family: var(--font-title);
@@ -25,9 +27,11 @@
       margin: 18px 0 10px 0;
       text-shadow: var(--glow);
     }
+
     .room-info {
       margin: 28px 0 18px 0;
     }
+
     .player-count {
       font-size: 1.1rem;
       color: var(--color-primary);
@@ -35,6 +39,7 @@
       margin: 10px 0;
       font-family: var(--font-body);
     }
+
     .role-buttons {
       display: flex;
       gap: 24px;
@@ -42,6 +47,7 @@
       margin: 32px 0 24px 0;
       flex-wrap: wrap;
     }
+
     .role-btn {
       padding: 1rem 2.2rem;
       font-size: 1.1rem;
@@ -53,23 +59,27 @@
       transition: all 0.2s;
       text-decoration: none;
       font-family: var(--font-body);
-      box-shadow: 0 0 0 rgba(3,255,152,0);
+      box-shadow: 0 0 0 rgba(3, 255, 152, 0);
     }
+
     .role-btn:hover {
       background: var(--color-accent);
       color: var(--color-bg);
       box-shadow: 0 0 16px var(--color-accent);
       border-color: var(--color-accent);
     }
+
     .role-btn.investigator {
       border-color: var(--color-secondary);
       color: var(--color-secondary);
     }
+
     .role-btn.investigator:hover {
       background: var(--color-secondary);
       color: var(--color-bg);
       box-shadow: 0 0 16px var(--color-secondary);
     }
+
     .share-section {
       margin: 36px 0 0 0;
       padding: 18px 0 0 0;
@@ -77,8 +87,9 @@
       background: none;
       border-radius: 0;
     }
+
     .url-input {
-      background: rgba(3,255,152,0.07);
+      background: rgba(3, 255, 152, 0.07);
       border: 1px solid var(--color-accent);
       padding: 10px;
       margin: 10px 0;
@@ -88,6 +99,7 @@
       font-family: var(--font-body);
       font-size: 1rem;
     }
+
     .copy-btn {
       background: var(--color-accent);
       border: none;
@@ -100,9 +112,11 @@
       font-size: 1rem;
       transition: background 0.2s;
     }
+
     .copy-btn:active {
       background: var(--color-secondary);
     }
+
     .status-indicator {
       display: inline-block;
       width: 12px;
@@ -112,21 +126,43 @@
       margin-right: 8px;
       animation: pulse 2s infinite;
     }
+
     @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
     }
+
     @media (max-width: 600px) {
-      .room-container { padding: 18px 2vw; }
-      .room-code { font-size: 2rem; }
-      .url-input { width: 98vw; max-width: 99%; }
+      .room-container {
+        padding: 18px 2vw;
+      }
+
+      .room-code {
+        font-size: 2rem;
+      }
+
+      .url-input {
+        width: 98vw;
+        max-width: 99%;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="room-container">
-    <h1 style="font-family: var(--font-title); font-size: 2.2rem; color: var(--color-primary); text-shadow: var(--glow); font-weight: 600; margin-bottom: 0.5em;">Room Alibi</h1>
+    <h1
+      style="font-family: var(--font-title); font-size: 2.2rem; color: var(--color-primary); text-shadow: var(--glow); font-weight: 600; margin-bottom: 0.5em;">
+      Room Alibi</h1>
     <div class="room-code" id="room-code"><!-- Code injecté par JS --></div>
     <div class="room-info">
       <div class="player-count">
@@ -140,7 +176,8 @@
       <a href="#" class="role-btn" id="accused-btn">Rejoindre comme Accusé</a>
     </div>
     <div class="share-section">
-      <h3 style="font-family: var(--font-title); color: var(--color-primary); font-size: 1.2rem; margin-bottom: 0.5em;">Partager cette room</h3>
+      <h3 style="font-family: var(--font-title); color: var(--color-primary); font-size: 1.2rem; margin-bottom: 0.5em;">
+        Partager cette room</h3>
       <p style="font-size: 1rem; color: var(--color-primary); opacity: 0.7;">Envoyez ces liens aux autres joueurs :</p>
       <div>
         <label>Lien Enquêteur :</label><br>
@@ -154,7 +191,8 @@
       </div>
     </div>
     <div style="margin-top: 30px;">
-      <a href="/" style="color: var(--color-secondary); text-decoration: none; font-family: var(--font-body);">Retour à l'accueil</a>
+      <a href="/" style="color: var(--color-secondary); text-decoration: none; font-family: var(--font-body);">Retour à
+        l'accueil</a>
     </div>
   </div>
 
@@ -162,21 +200,21 @@
     // Récupérer le code de room depuis l'URL
     const pathParts = window.location.pathname.split('/');
     const roomCode = pathParts[2] || '';
-    
+
     // Mettre à jour l'affichage
     document.getElementById('room-code').textContent = roomCode;
-    
+
     // Construire les URLs
     const baseUrl = window.location.origin;
     const investigatorUrl = `${baseUrl}/room/${roomCode}/investigator`;
     const accusedUrl = `${baseUrl}/room/${roomCode}/accused`;
-    
+
     // Mettre à jour les liens et champs
     document.getElementById('investigator-btn').href = investigatorUrl;
     document.getElementById('accused-btn').href = accusedUrl;
     document.getElementById('investigator-url').value = investigatorUrl;
     document.getElementById('accused-url').value = accusedUrl;
-    
+
     // Fonction pour copier une URL
     function copyUrl(inputId) {
       const input = document.getElementById(inputId);
@@ -193,14 +231,14 @@
         }, 2000);
       });
     }
-    
+
     // Mettre à jour le nombre de joueurs en temps réel
     function updateRoomInfo() {
       fetch(`/api/room/${roomCode}`)
         .then(response => response.json())
         .then(data => {
           if (data.exists) {
-            document.getElementById('player-count').textContent = 
+            document.getElementById('player-count').textContent =
               `${data.playerCount} joueur${data.playerCount > 1 ? 's' : ''} connecté${data.playerCount > 1 ? 's' : ''}`;
             const statusElement = document.getElementById('room-status');
             if (data.status === 'playing') {
@@ -222,10 +260,11 @@
           console.error('Erreur lors de la mise à jour:', error);
         });
     }
-    
+
     // Mettre à jour toutes les 3 secondes
     updateRoomInfo();
     setInterval(updateRoomInfo, 3000);
   </script>
 </body>
+
 </html>
