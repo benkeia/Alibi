@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# macOS
+.DS_Store
+
+# Game state (generated at runtime)
+gamestate.json
+
+# Logs
+*.log
+npm-debug.log*
