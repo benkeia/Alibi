@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,27 +21,27 @@
       font-size: 0.9rem;
       text-align: center;
     }
-    
+
     .network-info h4 {
       color: var(--color-primary);
       margin: 0 0 1rem 0;
       font-weight: 600;
       text-shadow: var(--glow);
     }
-    
+
     .network-info p {
       margin: 0.5rem 0;
       color: var(--color-primary);
       opacity: 0.8;
     }
-    
+
     .ip-address {
       font-family: var(--font-title);
       color: var(--color-accent);
       text-shadow: var(--glow);
       font-weight: 600;
     }
-    
+
     .note {
       margin-top: 1rem;
       padding-top: 1rem;
@@ -48,23 +49,23 @@
       font-size: 0.8rem;
       opacity: 0.6;
     }
-    
+
     .role-card.multi-mode {
       background: rgba(3, 255, 152, 0.08);
       border: 2px solid var(--color-accent);
     }
-    
+
     .multi-options {
       display: flex;
       justify-content: center;
       margin-top: 1rem;
     }
-    
+
     .role-btn.small {
       font-size: 1rem;
       padding: 0.8rem 1rem;
     }
-    
+
     @media (max-width: 768px) {
       .multi-options {
         flex-direction: column;
@@ -73,6 +74,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="background"></div>
 
@@ -80,14 +82,14 @@
     <h1 class="title">
       Alibi<span class="blinker">_</span>
     </h1>
-    <p class="subtitle">Système de rooms avec crimes et alibis personnalisés</p>
+    <p class="subtitle">Le meilleur duo évite la prison</p>
   </div>
 
   <section class="role-selection" style="margin-bottom: 250px;">
     <div class="roles-grid">
       <!-- Nouveau système de Rooms -->
       <div class="role-card multi-mode">
-        <h2 class="role-title">🏠 Créer une Room</h2>
+        <h2 class="role-title"> Créer une Room</h2>
         <p class="role-desc">
           <strong>Démarrez une nouvelle partie</strong><br>
           • Choisissez un crime et un alibi<br>
@@ -101,7 +103,7 @@
 
       <!-- Rejoindre une Room -->
       <div class="role-card multi-mode">
-        <h2 class="role-title">🎯 Rejoindre une Room</h2>
+        <h2 class="role-title"> Rejoindre une Room</h2>
         <p class="role-desc">
           <strong>Participez à une partie</strong><br>
           • Entrez le code de room<br>
@@ -116,41 +118,35 @@
   </section>
 
   <!-- Modal pour rejoindre une room -->
-  <div id="join-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border-radius: 15px; text-align: center;">
+  <div id="join-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+    <div
+      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border-radius: 15px; text-align: center;">
       <h3 style="color: #00ff41; margin-bottom: 20px;">Rejoindre une Room</h3>
-      <input type="text" id="room-code-input" placeholder="Code de la room (4 caractères)" 
-             style="padding: 15px; font-size: 1.2em; width: 200px; text-align: center; text-transform: uppercase; background: #333; color: white; border: 1px solid #555; border-radius: 8px;" 
-             maxlength="4">
+      <input type="text" id="room-code-input" placeholder="Code de la room (4 caractères)"
+        style="padding: 15px; font-size: 1.2em; width: 200px; text-align: center; text-transform: uppercase; background: #333; color: white; border: 1px solid #555; border-radius: 8px;"
+        maxlength="4">
       <br><br>
-      <button onclick="joinRoom()" style="padding: 15px 30px; background: #00ff41; border: none; border-radius: 8px; color: black; font-weight: bold; cursor: pointer; margin-right: 10px;">Rejoindre</button>
-      <button onclick="hideJoinModal()" style="padding: 15px 30px; background: #666; border: none; border-radius: 8px; color: white; cursor: pointer;">Annuler</button>
+      <button onclick="joinRoom()"
+        style="padding: 15px 30px; background: #00ff41; border: none; border-radius: 8px; color: black; font-weight: bold; cursor: pointer; margin-right: 10px;">Rejoindre</button>
+      <button onclick="hideJoinModal()"
+        style="padding: 15px 30px; background: #666; border: none; border-radius: 8px; color: white; cursor: pointer;">Annuler</button>
       <div id="join-error" style="color: #ff6b6b; margin-top: 15px; display: none;">Room introuvable</div>
     </div>
   </div>
 
-  <div class="network-info">
-    <h4>🌐 Accès Réseau Local</h4>
-    <p>Pour jouer depuis d'autres appareils sur le même réseau :</p>
-    <p>Remplacez <span class="ip-address">localhost</span> par l'adresse IP de cette machine</p>
-    <p>Exemple : <span class="ip-address">http://192.168.1.100:3000</span></p>
-    <div class="note">
-      L'adresse IP exacte s'affiche dans la console du serveur lors du démarrage
-    </div>
-  </div>
 
   <footer class="footer">
     <p class="footer-text">
-      Système de rooms avec sélection de crimes et alibis personnalisés
-    </p>
+      © Baptiste Saegaert - 2025 </p>
   </footer>
 
   <script>
     // Gestion des rooms
-    document.getElementById('create-room-btn').addEventListener('click', async function() {
+    document.getElementById('create-room-btn').addEventListener('click', async function () {
       this.textContent = 'Création...';
       this.disabled = true;
-      
+
       try {
         const response = await fetch('/api/create-room', {
           method: 'POST',
@@ -158,9 +154,9 @@
             'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           // Rediriger vers la page de la room
           window.location.href = `/room/${data.roomCode}`;
@@ -175,32 +171,32 @@
         this.disabled = false;
       }
     });
-    
+
     function showJoinModal() {
       document.getElementById('join-modal').style.display = 'block';
       document.getElementById('room-code-input').focus();
     }
-    
+
     function hideJoinModal() {
       document.getElementById('join-modal').style.display = 'none';
       document.getElementById('room-code-input').value = '';
       document.getElementById('join-error').style.display = 'none';
     }
-    
+
     async function joinRoom() {
       const roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
       const errorDiv = document.getElementById('join-error');
-      
+
       if (roomCode.length !== 4) {
         errorDiv.textContent = 'Le code doit contenir 4 caractères';
         errorDiv.style.display = 'block';
         return;
       }
-      
+
       try {
         const response = await fetch(`/api/room/${roomCode}`);
         const data = await response.json();
-        
+
         if (data.exists) {
           window.location.href = `/room/${roomCode}`;
         } else {
@@ -213,24 +209,24 @@
         errorDiv.style.display = 'block';
       }
     }
-    
+
     // Permettre d'appuyer sur Entrée pour rejoindre
-    document.getElementById('room-code-input').addEventListener('keypress', function(e) {
+    document.getElementById('room-code-input').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         joinRoom();
       }
     });
-    
+
     // Forcer les caractères en majuscules
-    document.getElementById('room-code-input').addEventListener('input', function(e) {
+    document.getElementById('room-code-input').addEventListener('input', function (e) {
       e.target.value = e.target.value.toUpperCase();
     });
 
     // Afficher l'adresse IP locale si possible
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const currentHost = window.location.host;
       const ipAddressElements = document.querySelectorAll('.ip-address');
-      
+
       // Si on n'est pas sur localhost, afficher l'adresse actuelle
       if (!currentHost.includes('localhost') && !currentHost.includes('127.0.0.1')) {
         ipAddressElements.forEach(el => {
@@ -244,4 +240,5 @@
     });
   </script>
 </body>
+
 </html>

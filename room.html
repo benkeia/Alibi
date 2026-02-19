@@ -8,118 +8,126 @@
   <style>
     .room-container {
       max-width: 800px;
-      margin: 50px auto;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.8);
-      border-radius: 15px;
+      margin: 60px auto;
+      padding: 40px 30px;
+      background: rgba(3, 255, 152, 0.04);
+      border-radius: 12px;
+      border: 1.5px solid var(--color-accent);
+      box-shadow: 0 0 32px rgba(3,255,152,0.08);
       text-align: center;
+      font-family: var(--font-body);
     }
-    
     .room-code {
-      font-size: 3em;
-      font-weight: bold;
-      color: #00ff41;
-      margin: 20px 0;
-      letter-spacing: 0.2em;
-      font-family: 'Courier New', monospace;
+      font-size: 2.8rem;
+      font-family: var(--font-title);
+      color: var(--color-primary);
+      letter-spacing: 0.18em;
+      margin: 18px 0 10px 0;
+      text-shadow: var(--glow);
     }
-    
     .room-info {
-      margin: 30px 0;
+      margin: 28px 0 18px 0;
     }
-    
     .player-count {
-      font-size: 1.2em;
+      font-size: 1.1rem;
+      color: var(--color-primary);
+      opacity: 0.8;
       margin: 10px 0;
+      font-family: var(--font-body);
     }
-    
     .role-buttons {
       display: flex;
-      gap: 20px;
+      gap: 24px;
       justify-content: center;
-      margin: 30px 0;
+      margin: 32px 0 24px 0;
       flex-wrap: wrap;
     }
-    
     .role-btn {
-      padding: 15px 30px;
-      font-size: 1.1em;
-      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-      border: none;
+      padding: 1rem 2.2rem;
+      font-size: 1.1rem;
+      background: var(--color-bg);
+      border: 1.5px solid var(--color-accent);
       border-radius: 8px;
-      color: white;
+      color: var(--color-primary);
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
       text-decoration: none;
-      display: inline-block;
+      font-family: var(--font-body);
+      box-shadow: 0 0 0 rgba(3,255,152,0);
     }
-    
     .role-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+      background: var(--color-accent);
+      color: var(--color-bg);
+      box-shadow: 0 0 16px var(--color-accent);
+      border-color: var(--color-accent);
     }
-    
     .role-btn.investigator {
-      background: linear-gradient(45deg, #4834d4, #6c5ce7);
+      border-color: var(--color-secondary);
+      color: var(--color-secondary);
     }
-    
     .role-btn.investigator:hover {
-      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+      background: var(--color-secondary);
+      color: var(--color-bg);
+      box-shadow: 0 0 16px var(--color-secondary);
     }
-    
     .share-section {
-      margin: 40px 0;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      margin: 36px 0 0 0;
+      padding: 18px 0 0 0;
+      border-top: 1px solid var(--color-accent);
+      background: none;
+      border-radius: 0;
     }
-    
     .url-input {
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid #444;
+      background: rgba(3,255,152,0.07);
+      border: 1px solid var(--color-accent);
       padding: 10px;
-      margin: 10px;
+      margin: 10px 0;
       border-radius: 5px;
-      color: white;
-      width: 300px;
-      font-family: monospace;
+      color: var(--color-primary);
+      width: 320px;
+      font-family: var(--font-body);
+      font-size: 1rem;
     }
-    
     .copy-btn {
-      background: #2ed573;
+      background: var(--color-accent);
       border: none;
       padding: 10px 20px;
       border-radius: 5px;
-      color: white;
+      color: var(--color-bg);
       cursor: pointer;
       margin-left: 10px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      transition: background 0.2s;
     }
-    
+    .copy-btn:active {
+      background: var(--color-secondary);
+    }
     .status-indicator {
       display: inline-block;
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #2ed573;
+      background: var(--color-accent);
       margin-right: 8px;
       animation: pulse 2s infinite;
     }
-    
     @keyframes pulse {
       0% { opacity: 1; }
       50% { opacity: 0.5; }
       100% { opacity: 1; }
     }
+    @media (max-width: 600px) {
+      .room-container { padding: 18px 2vw; }
+      .room-code { font-size: 2rem; }
+      .url-input { width: 98vw; max-width: 99%; }
+    }
   </style>
 </head>
 <body>
   <div class="room-container">
-    <h1>🎮 Room Alibi</h1>
-    
-    <div class="room-code" id="room-code">
-      <!-- Code sera injecté par JS -->
-    </div>
-    
+    <h1 style="font-family: var(--font-title); font-size: 2.2rem; color: var(--color-primary); text-shadow: var(--glow); font-weight: 600; margin-bottom: 0.5em;">Room Alibi</h1>
+    <div class="room-code" id="room-code"><!-- Code injecté par JS --></div>
     <div class="room-info">
       <div class="player-count">
         <span class="status-indicator"></span>
@@ -127,35 +135,26 @@
       </div>
       <div id="room-status">En attente de joueurs...</div>
     </div>
-    
     <div class="role-buttons">
-      <a href="#" class="role-btn investigator" id="investigator-btn">
-        🔍 Rejoindre comme Enquêteur
-      </a>
-      <a href="#" class="role-btn" id="accused-btn">
-        🎭 Rejoindre comme Accusé
-      </a>
+      <a href="#" class="role-btn investigator" id="investigator-btn">Rejoindre comme Enquêteur</a>
+      <a href="#" class="role-btn" id="accused-btn">Rejoindre comme Accusé</a>
     </div>
-    
     <div class="share-section">
-      <h3>📤 Partager cette room</h3>
-      <p>Envoyez ces liens aux autres joueurs :</p>
-      
+      <h3 style="font-family: var(--font-title); color: var(--color-primary); font-size: 1.2rem; margin-bottom: 0.5em;">Partager cette room</h3>
+      <p style="font-size: 1rem; color: var(--color-primary); opacity: 0.7;">Envoyez ces liens aux autres joueurs :</p>
       <div>
         <label>Lien Enquêteur :</label><br>
         <input type="text" class="url-input" id="investigator-url" readonly>
         <button class="copy-btn" onclick="copyUrl('investigator-url')">Copier</button>
       </div>
-      
       <div>
         <label>Lien Accusé :</label><br>
         <input type="text" class="url-input" id="accused-url" readonly>
         <button class="copy-btn" onclick="copyUrl('accused-url')">Copier</button>
       </div>
     </div>
-    
     <div style="margin-top: 30px;">
-      <a href="/" style="color: #888; text-decoration: none;">← Retour à l'accueil</a>
+      <a href="/" style="color: var(--color-secondary); text-decoration: none; font-family: var(--font-body);">Retour à l'accueil</a>
     </div>
   </div>
 
@@ -203,21 +202,20 @@
           if (data.exists) {
             document.getElementById('player-count').textContent = 
               `${data.playerCount} joueur${data.playerCount > 1 ? 's' : ''} connecté${data.playerCount > 1 ? 's' : ''}`;
-            
             const statusElement = document.getElementById('room-status');
             if (data.status === 'playing') {
-              statusElement.textContent = '🎮 Partie en cours';
-              statusElement.style.color = '#2ed573';
+              statusElement.textContent = 'Partie en cours';
+              statusElement.style.color = 'var(--color-accent)';
             } else if (data.playerCount === 0) {
-              statusElement.textContent = '⏳ En attente de joueurs...';
-              statusElement.style.color = '#ffa500';
+              statusElement.textContent = 'En attente de joueurs...';
+              statusElement.style.color = 'var(--color-warning, #ffa500)';
             } else {
-              statusElement.textContent = '👥 Joueurs connectés - Prêt à commencer';
-              statusElement.style.color = '#2ed573';
+              statusElement.textContent = 'Joueurs connectés - Prêt à commencer';
+              statusElement.style.color = 'var(--color-accent)';
             }
           } else {
-            document.getElementById('room-status').textContent = '❌ Room introuvable';
-            document.getElementById('room-status').style.color = '#ff6b6b';
+            document.getElementById('room-status').textContent = 'Room introuvable';
+            document.getElementById('room-status').style.color = 'var(--color-error, #ff6b6b)';
           }
         })
         .catch(error => {
