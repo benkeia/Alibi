@@ -3,28 +3,27 @@
 -------------------- */
 :root {
   --color-bg: #000;
-  --color-primary: #03FF98;
-  --color-secondary: #02CC7A;
-  --color-accent: #04FF9A;
+  --color-primary: #03ff98;
+  --color-secondary: #02cc7a;
+  --color-accent: #04ff9a;
   --color-border-muted: #666;
-  --color-error: #F44336;
-  --color-error-border: #8B0000;
+  --color-error: #f44336;
+  --color-error-border: #8b0000;
   --color-error-bg: #2c0101;
-  --color-warning: #FF9800;
+  --color-warning: #ff9800;
   --color-success-bg: #0d2818;
   --font-title: "Kode Mono", monospace;
   --font-body: "JetBrains Mono", monospace;
 
-  --title-size: 6rem;     /* Un peu plus petit pour faire place aux rôles */
+  --title-size: 6rem; /* Un peu plus petit pour faire place aux rôles */
   --subtitle-size: 1.2rem;
   --role-size: 1.8rem;
   --desc-size: 1rem;
   --btn-size: 1.4rem;
 
-  --glow: 0 0 8px rgba(3, 255, 152, 0.4),
-          0 0 16px rgba(3, 255, 152, 0.3);
-  --glow-strong: 0 0 12px rgba(3, 255, 152, 0.6),
-                 0 0 24px rgba(3, 255, 152, 0.4);
+  --glow: 0 0 8px rgba(3, 255, 152, 0.4), 0 0 16px rgba(3, 255, 152, 0.3);
+  --glow-strong:
+    0 0 12px rgba(3, 255, 152, 0.6), 0 0 24px rgba(3, 255, 152, 0.4);
 }
 
 /* --------------------
@@ -56,8 +55,10 @@ body {
   background: url("assets/concrete.jpg") center/cover no-repeat;
   opacity: 0.1;
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: -1;
 }
 
