@@ -5,7 +5,7 @@
   min-height: 100vh;
   position: relative;
   overflow: hidden;
-  background: rgba(255, 0, 0, 0.812)important;
+  background: var(--color-bg);
 }
 
 .accused-main {
@@ -156,20 +156,20 @@
 }
 
 .score-circle.pending {
-  background: rgba(128, 128, 128, 0.3);
-  border-color: #666;
+  background: var(--color-bg, #222);
+  border-color: var(--color-border-muted, #666);
 }
 
 .score-circle.correct {
-  background: #4CAF50;
-  border-color: #4CAF50;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+  background: var(--color-accent, #03FF98);
+  border-color: var(--color-accent, #03FF98);
+  box-shadow: 0 0 8px var(--color-accent, #03FF98);
 }
 
 .score-circle.incorrect {
-  background: #F44336;
-  border-color: #F44336;
-  box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
+  background: var(--color-error, #F44336);
+  border-color: var(--color-error, #F44336);
+  box-shadow: 0 0 8px var(--color-error, #F44336);
 }
 
 .team-total {
@@ -307,15 +307,15 @@
 }
 
 .alibi-timer.warning {
-  color: #FF9800;
-  border-color: #FF9800;
+  color: var(--color-warning, #FF9800);
+  border-color: var(--color-warning, #FF9800);
   background: rgba(255, 152, 0, 0.1);
   animation: pulse-warning 1s infinite;
 }
 
 .alibi-timer.danger {
-  color: #F44336;
-  border-color: #F44336;
+  color: var(--color-error, #F44336);
+  border-color: var(--color-error, #F44336);
   background: rgba(244, 67, 54, 0.1);
   animation: pulse-danger 0.5s infinite;
 }
@@ -426,7 +426,7 @@
 
 /* Effet global de succès - background vert foncé */
 .feedback-success-global {
-  background: #0d2818 !important;
+  background: var(--color-success-bg, #0d2818);
   transition: background 0.3s ease;
 }
 
@@ -434,11 +434,11 @@
 .feedback-success-global .team-score,
 .feedback-success-global .connection-status,
 .feedback-success-global .room-info {
-  border-color: #228B22 !important;
-  background: rgba(34, 139, 34, 0.4) !important;
-  color: #32CD32 !important;
-  text-shadow: 0 0 25px rgba(50, 205, 50, 1) !important;
-  box-shadow: 0 0 40px rgba(50, 205, 50, 0.8) !important;
+  border-color: var(--color-accent, #03FF98);
+  background: var(--color-success-bg, rgba(3, 255, 152, 0.2));
+  color: var(--color-accent, #03FF98);
+  text-shadow: 0 0 25px var(--color-accent, #03FF98);
+  box-shadow: 0 0 40px var(--color-accent, #03FF98);
   transform: scale(1.02);
   transition: all 0.3s ease;
 }
@@ -449,7 +449,7 @@
 
 /* Effet global d'erreur - background rouge foncé */
 .feedback-error-global {
-  background: #2c0101 !important;
+  background: var(--color-error-bg, #2c0101);
   transition: background 0.3s ease;
 }
 
@@ -457,11 +457,11 @@
 .feedback-error-global .team-score,
 .feedback-error-global .connection-status,
 .feedback-error-global .room-info {
-  border-color: #8B0000 !important;
-  background: rgba(139, 0, 0, 0.4) !important;
-  color: #FF4500 !important;
-  text-shadow: 0 0 25px rgba(255, 69, 0, 1) !important;
-  box-shadow: 0 0 40px rgba(255, 69, 0, 0.8) !important;
+  border-color: var(--color-error-border, #8B0000);
+  background: var(--color-error-bg, rgba(139, 0, 0, 0.4));
+  color: var(--color-error, #FF4500);
+  text-shadow: 0 0 25px var(--color-error, #FF4500);
+  box-shadow: 0 0 40px var(--color-error, #FF4500);
   transform: scale(1.02);
   transition: all 0.3s ease;
 }

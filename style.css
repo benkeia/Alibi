@@ -6,6 +6,12 @@
   --color-primary: #03FF98;
   --color-secondary: #02CC7A;
   --color-accent: #04FF9A;
+  --color-border-muted: #666;
+  --color-error: #F44336;
+  --color-error-border: #8B0000;
+  --color-error-bg: #2c0101;
+  --color-warning: #FF9800;
+  --color-success-bg: #0d2818;
   --font-title: "Kode Mono", monospace;
   --font-body: "JetBrains Mono", monospace;
 
